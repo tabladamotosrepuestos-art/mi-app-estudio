@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { ProductData, InventoryItem, BulkPromo, THEMES, QuantityRule } from './types';
 import PreviewCard from './components/PreviewCard';
-import { generateProductImage, extractProductsFromList } from './services/geminiService';
+import { extractProductsFromList } from './services/geminiService';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
