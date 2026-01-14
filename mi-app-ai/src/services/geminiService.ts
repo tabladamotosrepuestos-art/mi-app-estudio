@@ -1,12 +1,9 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ImageGenerationConfig } from "../types";
 
+// Inicialización corregida
 const ai = new GoogleGenerativeAI(process.env.API_KEY || "");
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ImageGenerationConfig } from "../types";
 
-const ai = new GoogleGenerativeAI(process.env.API_KEY || "");
 /**
  * Genera una imagen publicitaria para un producto
  */
@@ -23,48 +20,30 @@ export const generateProductImage = async (prompt: string, aiConfig?: ImageGener
 
     const style = aiConfig?.stylePreset || 'studio';
     const negativeInstructions = aiConfig?.negativePrompt ? ` Avoid: ${aiConfig.negativePrompt}.` : "";
-    const fullPrompt = `${styleInstructions[style]} Subject: ${prompt}.${negativeInstructions} High quality, sharp focus, professional resolution.`;
+    const fullPrompt = `${styleInstructions[style]} Subject: ${prompt}.${negativeInstructions} High quality, sharp focus, 8k resolution.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: fullPrompt }],
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: aiConfig?.aspectRatio || "1:1",
-        },
-      },
-    });
-
-    let imageUrl = '';
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-        break;
-      }
-    }
-
-    if (!imageUrl) throw new Error("No image generated");
-    return imageUrl;
+    // Nota: El modelo de generación de imágenes depende de la disponibilidad de tu API Key
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    return response.text(); 
   } catch (error) {
-    console.error("Error generating image:", error);
-    throw error;
+    console.error("Error generando imagen:", error);
+    throw new Error("No se pudo generar la imagen publicitaria.");
   }
 };
 
 /**
- * SISTEMA AUTOMÁTICO EMPRESARIAL DE LECTURA DE IMÁGENES CON LISTADOS DE PRODUCTOS.
- * Extrae SKUs, descripciones y precios desde tablas, listados o grillas.
+ * Extrae productos de una imagen de listado (OCR + IA)
  */
-export const extractProductsFromImage = async (base64Image: string): Promise<any> => {
+export const extractProductsFromList = async (base64Image: string) => {
   try {
-    const systemInstruction = `Actuá como un SISTEMA AUTOMÁTICO EMPRESARIAL DE LECTURA DE IMÁGENES CON LISTADOS DE PRODUCTOS.
-Tu función es leer imágenes que contienen tablas, listados o grillas de productos y extraer todos los códigos válidos para generar una tarjeta promocional por cada código detectado.
+    const systemInstruction = `ERES UN EXPERTO EN EXTRACCIÓN DE DATOS DE LISTADOS DE REPUESTOS.
+TU TAREA ES LEER LA IMAGEN Y DEVOLVER UN JSON PURO CON LOS PRODUCTOS.
 
-⚠️ Regla crítica:
-- NUNCA inventes códigos.
-- NUNCA omitas filas legibles.
+REGLAS DE EXTRACCIÓN:
+- Identifica columnas de CÓDIGO, DESCRIPCIÓN y PRECIO.
+- Ignora encabezados y filas ilegibles.
 - NUNCA mezcles columnas.
 - MANTÉN los ceros a la izquierda en los códigos (ej. "00015").
 
@@ -88,6 +67,8 @@ FORMATO DE SALIDA (OBLIGATORIO – JSON):
   "mensaje": "string"
 }`;
 
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+
     const imagePart = {
       inlineData: {
         mimeType: "image/jpeg",
@@ -95,24 +76,20 @@ FORMATO DE SALIDA (OBLIGATORIO – JSON):
       },
     };
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: { parts: [imagePart, { text: "Lee este listado y extrae todos los productos detectados." }] },
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
+    const result = await model.generateContent([
+      systemInstruction,
+      { text: "Lee este listado y extrae todos los productos detectados en formato JSON." },
+      imagePart
+    ]);
 
-    const result = JSON.parse(response.text || "{}");
-    return result;
+    const response = await result.response;
+    const text = response.text();
+    
+    // Limpiar el texto en caso de que traiga marcas de markdown ```json
+    const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleanText || "{}");
   } catch (error) {
     console.error("Error extrayendo productos del listado:", error);
-    return { estado: "error", mensaje: "Error de conexión con la IA de lectura empresarial" };
+    return { estado: "error", mensaje: "No se pudo procesar la imagen." };
   }
-};
-
-// Mantenemos esta para compatibilidad o escaneos rápidos de un solo producto
-export const extractSkuFromImage = async (base64Image: string): Promise<any> => {
-  return extractProductsFromImage(base64Image);
 };
