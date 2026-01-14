@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// En Vercel se usa process.env, en local Vite usa import.meta.env
+// Acceso compatible con Vite y Vercel para evitar errores de TS
 const apiKey = (import.meta as any).env?.VITE_API_KEY || (process as any).env?.API_KEY || "";
 const ai = new GoogleGenerativeAI(apiKey);
 
@@ -12,10 +12,13 @@ export const generateProductImage = async (prompt: string): Promise<string> => {
     return response.text(); 
   } catch (error) {
     console.error("Error:", error);
-    throw new Error("Error en IA");
+    throw new Error("No se pudo generar la imagen.");
   }
 };
 
+/**
+ * Nombre corregido para coincidir con lo que espera App.tsx
+ */
 export const extractProductsFromList = async (base64Image: string) => {
   try {
     const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -27,8 +30,9 @@ export const extractProductsFromList = async (base64Image: string) => {
       imagePart
     ]);
     const text = (await result.response).text();
-    return JSON.parse(text.replace(/```json/g, "").replace(/```/g, "").trim());
+    const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleanText || "{}");
   } catch (error) {
-    return { estado: "error" };
+    return { estado: "error", mensaje: "Error al procesar." };
   }
 };
