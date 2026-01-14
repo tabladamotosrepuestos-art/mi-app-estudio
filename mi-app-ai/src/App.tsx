@@ -2,52 +2,48 @@ import React, { useState } from 'react';
 import { extractProductsFromList } from './services/geminiService';
 
 function App() {
-  const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState("");
-
   return (
-    <div style={{ 
-      fontFamily: 'sans-serif', 
-      padding: '40px', 
-      textAlign: 'center',
-      backgroundColor: '#f4f7f6',
-      minHeight: '100vh'
-    }}>
-      <h1 style={{ color: '#2c3e50' }}>Analizador de Repuestos IA</h1>
-      <p style={{ color: '#7f8c8d' }}>Sube una foto de tu lista de repuestos para procesarla.</p>
-      
-      <div style={{ 
-        background: 'white', 
-        padding: '30px', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        display: 'inline-block',
-        marginTop: '20px'
-      }}>
-        <input type="file" accept="image/*" style={{ marginBottom: '20px' }} />
-        <br />
-        <button 
-          style={{ 
-            backgroundColor: '#3498db', 
-            color: 'white', 
-            border: 'none', 
-            padding: '10px 20px', 
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-          onClick={() => alert('¡IA lista! Selecciona un archivo primero.')}
-        >
-          {loading ? 'Procesando...' : 'Analizar con Gemini'}
-        </button>
-      </div>
-
-      {resultado && (
-        <div style={{ marginTop: '30px', textAlign: 'left', display: 'inline-block', width: '100%', maxWidth: '600px' }}>
-          <h3>Resultado:</h3>
-          <pre style={{ background: '#eee', padding: '15px', borderRadius: '5px' }}>{resultado}</pre>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa', fontFamily: 'sans-serif' }}>
+      {/* Barra Lateral Izquierda */}
+      <aside style={{ width: '280px', backgroundColor: 'white', borderRight: '1px solid #e9ecef', padding: '20px' }}>
+        <div style={{ color: '#d90429', fontWeight: 'bold', marginBottom: '30px' }}>SISTEMA COMERCIAL <span style={{color: '#2b2d42'}}>PRO</span></div>
+        
+        <div style={{ marginBottom: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#adb5bd', fontWeight: 'bold' }}>INVENTARIO BASE</p>
+          <div style={{ border: '2px dashed #dee2e6', borderRadius: '10px', padding: '20px', textAlign: 'center', color: '#adb5bd' }}>
+            VINCULAR EXCEL
+          </div>
         </div>
-      )}
+
+        <div>
+          <p style={{ fontSize: '12px', color: '#adb5bd', fontWeight: 'bold' }}>OFERTA GLOBAL</p>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {['0%', '10%', '20%', '30%'].map(pct => (
+              <button key={pct} style={{ flex: 1, padding: '5px', border: '1px solid #dee2e6', borderRadius: '5px', backgroundColor: pct === '0%' ? '#d90429' : 'white', color: pct === '0%' ? 'white' : 'black' }}>{pct}</button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Contenido Principal */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <button style={{ position: 'absolute', top: '20px', right: '20px', padding: '10px', borderRadius: '5px', border: '1px solid #dee2e6' }}>
+          📷 ESCANEO IA
+        </button>
+
+        <div style={{ textAlign: 'center', maxWidth: '500px', width: '100%' }}>
+          <h2 style={{ marginBottom: '20px', color: '#2b2d42' }}>CATÁLOGO PROFESIONAL</h2>
+          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
+            <textarea 
+              placeholder="Pega aquí uno o varios SKUs..." 
+              style={{ width: '100%', height: '150px', border: '1px solid #f1f3f5', borderRadius: '10px', padding: '15px', backgroundColor: '#f8f9fa', marginBottom: '20px' }}
+            />
+            <button style={{ width: '100%', padding: '15px', backgroundColor: '#d90429', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+              GENERAR FICHAS
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
