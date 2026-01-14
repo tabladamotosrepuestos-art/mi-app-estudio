@@ -1,50 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { extractProductsFromList } from './services/geminiService';
 
 function App() {
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState("");
+
   return (
     <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh',
-      fontFamily: 'sans-serif',
-      backgroundColor: '#f4f7f6',
+      fontFamily: 'sans-serif', 
+      padding: '40px', 
       textAlign: 'center',
-      padding: '20px'
+      backgroundColor: '#f4f7f6',
+      minHeight: '100vh'
     }}>
-      <header style={{ marginBottom: '30px' }}>
-        <h1 style={{ color: '#2c3e50', fontSize: '2.5rem' }}>Analizador de Repuestos</h1>
-        <p style={{ color: '#7f8c8d' }}>La aplicación se ha desplegado correctamente.</p>
-      </header>
+      <h1 style={{ color: '#2c3e50' }}>Analizador de Repuestos IA</h1>
+      <p style={{ color: '#7f8c8d' }}>Sube una foto de tu lista de repuestos para procesarla.</p>
       
-      <main style={{ 
-        backgroundColor: 'white', 
-        padding: '40px', 
+      <div style={{ 
+        background: 'white', 
+        padding: '30px', 
         borderRadius: '12px', 
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        maxWidth: '500px',
-        width: '100%'
+        display: 'inline-block',
+        marginTop: '20px'
       }}>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-            Selecciona la imagen de la lista:
-          </label>
-          <input type="file" accept="image/*" style={{ width: '100%' }} />
-        </div>
-        <button style={{ 
-          backgroundColor: '#3498db', 
-          color: 'white', 
-          border: 'none', 
-          padding: '12px 24px', 
-          borderRadius: '6px', 
-          cursor: 'pointer',
-          fontSize: '1rem',
-          fontWeight: 'bold'
-        }}>
-          Analizar con IA
+        <input type="file" accept="image/*" style={{ marginBottom: '20px' }} />
+        <br />
+        <button 
+          style={{ 
+            backgroundColor: '#3498db', 
+            color: 'white', 
+            border: 'none', 
+            padding: '10px 20px', 
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+          onClick={() => alert('¡IA lista! Selecciona un archivo primero.')}
+        >
+          {loading ? 'Procesando...' : 'Analizar con Gemini'}
         </button>
-      </main>
+      </div>
+
+      {resultado && (
+        <div style={{ marginTop: '30px', textAlign: 'left', display: 'inline-block', width: '100%', maxWidth: '600px' }}>
+          <h3>Resultado:</h3>
+          <pre style={{ background: '#eee', padding: '15px', borderRadius: '5px' }}>{resultado}</pre>
+        </div>
+      )}
     </div>
   );
 }
