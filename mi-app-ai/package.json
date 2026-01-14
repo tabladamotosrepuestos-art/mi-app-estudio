@@ -16,6 +16,7 @@
     "xlsx": "^0.18.5",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.1"
+    "react-pdf": "^7.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -31,3 +32,4 @@
     "vite": "^5.0.8"
   }
 }
+
