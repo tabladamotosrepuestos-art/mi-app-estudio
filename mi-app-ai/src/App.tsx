@@ -7,21 +7,44 @@ function App() {
       flexDirection: 'column', 
       alignItems: 'center', 
       justifyContent: 'center', 
-      height: '100vh',
+      minHeight: '100vh',
       fontFamily: 'sans-serif',
-      backgroundColor: '#f0f2f5'
+      backgroundColor: '#f4f7f6',
+      textAlign: 'center',
+      padding: '20px'
     }}>
-      <h1 style={{ color: '#1a73e8' }}>Analizador de Repuestos IA</h1>
-      <p>Si ves este mensaje, ¡tu aplicación ya está funcionando correctamente!</p>
-      <div style={{ 
-        padding: '20px', 
+      <header style={{ marginBottom: '30px' }}>
+        <h1 style={{ color: '#2c3e50', fontSize: '2.5rem' }}>Analizador de Repuestos</h1>
+        <p style={{ color: '#7f8c8d' }}>La aplicación se ha desplegado correctamente.</p>
+      </header>
+      
+      <main style={{ 
         backgroundColor: 'white', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+        padding: '40px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        maxWidth: '500px',
+        width: '100%'
       }}>
-        <input type="file" accept="image/*" />
-        <button style={{ marginLeft: '10px', padding: '5px 15px' }}>Analizar Lista</button>
-      </div>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+            Selecciona la imagen de la lista:
+          </label>
+          <input type="file" accept="image/*" style={{ width: '100%' }} />
+        </div>
+        <button style={{ 
+          backgroundColor: '#3498db', 
+          color: 'white', 
+          border: 'none', 
+          padding: '12px 24px', 
+          borderRadius: '6px', 
+          cursor: 'pointer',
+          fontSize: '1rem',
+          fontWeight: 'bold'
+        }}>
+          Analizar con IA
+        </button>
+      </main>
     </div>
   );
 }
