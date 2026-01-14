@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ImageGenerationConfig } from "../types";
 
 // Inicialización corregida
-const ai = new GoogleGenerativeAI(process.env.API_KEY || "");
+const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
 /**
  * Genera una imagen publicitaria para un producto
