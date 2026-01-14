@@ -1,9 +1,8 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import { ImageGenerationConfig } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
+const ai = new GoogleGenerativeAI(process.env.API_KEY);
 /**
  * Genera una imagen publicitaria para un producto
  */
