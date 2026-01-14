@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Acceso seguro a la API KEY
 const apiKey = (import.meta as any).env?.VITE_API_KEY || "";
 const ai = new GoogleGenerativeAI(apiKey);
 
@@ -14,10 +13,11 @@ export const extractProductsFromList = async (base64Image: string) => {
       }
     };
 
-    const prompt = "Analiza esta imagen y devuelve un JSON con: { 'productos': [ { 'codigo': '...', 'descripcion': '...' } ] }";
+    const prompt = "Analiza esta lista de repuestos. Extrae los códigos (SKU) y devuélvelos como una lista simple de códigos separados por saltos de línea. No agregues texto extra.";
     const result = await model.generateContent([prompt, imagePart]);
-    return JSON.parse(result.response.text());
+    return result.response.text();
   } catch (error) {
-    throw new Error("Fallo en el escaneo IA");
+    console.error("Error IA:", error);
+    throw new Error("No se pudo leer la imagen");
   }
 };
