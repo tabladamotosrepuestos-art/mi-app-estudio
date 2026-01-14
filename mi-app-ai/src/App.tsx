@@ -35,7 +35,7 @@ function App() {
         const data = await extractProductsFromList(reader.result as string);
         if (data.productos) {
           const procesados = data.productos.map((prodIA: any) => {
-            const match = dbPrecios.find(p => 
+            const match = dbPrecios.find((p: any) => 
               String(p.codigo).toLowerCase() === String(prodIA.codigo).toLowerCase()
             );
             return {
@@ -45,7 +45,7 @@ function App() {
             };
           });
           setProductosDetectados(procesados);
-          setSkus(procesados.map(p => `${p.codigo} - ${p.descripcion} - $${p.precio}`).join("\n"));
+          setSkus(procesados.map((p: any) => `${p.codigo} - ${p.descripcion} - $${p.precio}`).join("\n"));
         }
       } catch (error) {
         alert("Error en el escaneo.");
@@ -57,17 +57,17 @@ function App() {
   const generarPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("SISTEMA COMERCIAL PRO - FICHA DE COTIZACIÓN", 14, 20);
-    doc.setFontSize(12);
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
-
-    const tableRows = productosDetectados.map(p => [p.codigo, p.descripcion, `$${p.precio}`]);
+    doc.text("SISTEMA COMERCIAL PRO - COTIZACIÓN", 14, 20);
+    
+    // El parámetro 'p' ahora tiene tipo 'any' para evitar el error TS7006
+    const tableRows = productosDetectados.map((p: any) => [p.codigo, p.descripcion, `$${p.precio}`]);
+    
     (doc as any).autoTable({
       head: [['Código', 'Descripción', 'Precio']],
       body: tableRows,
       startY: 40,
       theme: 'striped',
-      headStyles: { fillColor: [217, 4, 41] } // Rojo característico de tu app
+      headStyles: { fillColor: [217, 4, 41] }
     });
 
     doc.save("Cotizacion_Repuestos.pdf");
@@ -86,7 +86,7 @@ function App() {
         </label>
         <p style={{ fontSize: '12px', color: '#adb5bd', fontWeight: 'bold' }}>OFERTA GLOBAL</p>
         <div style={{ display: 'flex', gap: '5px' }}>
-          {['0%', '10%', '20%', '30%'].map(pct => (
+          {['0%', '10%', '20%', '30%'].map((pct: string) => (
             <button key={pct} style={{ flex: 1, padding: '8px', border: '1px solid #dee2e6', borderRadius: '5px', backgroundColor: pct === '0%' ? '#d90429' : 'white', color: pct === '0%' ? 'white' : 'black' }}>{pct}</button>
           ))}
         </div>
