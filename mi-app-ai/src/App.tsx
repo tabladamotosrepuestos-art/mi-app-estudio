@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// Corrección del nombre de la función importada
+// Cambiamos el nombre para que coincida con el servicio
 import { extractProductsFromList } from './services/geminiService';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -8,7 +8,7 @@ import 'jspdf-autotable';
 function App() {
   const [loading, setLoading] = useState(false);
 
-  // Ejemplo de función de exportación corregida con tipos
+  // Agregamos tipos para evitar errores de TypeScript
   const exportToExcel = (data: any[], sheetName: string) => {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -17,9 +17,9 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <h1>Mi Aplicación de Repuestos</h1>
-      {/* Tu interfaz aquí */}
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1>Analizador de Repuestos</h1>
+      <p>Sube una lista o imagen para comenzar.</p>
     </div>
   );
 }
