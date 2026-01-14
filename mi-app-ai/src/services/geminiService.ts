@@ -1,4 +1,7 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ImageGenerationConfig } from "../types";
 
+const ai = new GoogleGenerativeAI(process.env.API_KEY || "");
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ImageGenerationConfig } from "../types";
 
