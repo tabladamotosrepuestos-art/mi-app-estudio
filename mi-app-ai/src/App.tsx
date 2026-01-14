@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
-// Cambiamos el nombre para que coincida con el servicio
-import { extractProductsFromList } from './services/geminiService';
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import React from 'react';
 
 function App() {
-  const [loading, setLoading] = useState(false);
-
-  // Agregamos tipos para evitar errores de TypeScript
-  const exportToExcel = (data: any[], sheetName: string) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, `${sheetName}.xlsx`);
-  };
-
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>Analizador de Repuestos</h1>
-      <p>Sube una lista o imagen para comenzar.</p>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: '100vh',
+      fontFamily: 'sans-serif',
+      backgroundColor: '#f0f2f5'
+    }}>
+      <h1 style={{ color: '#1a73e8' }}>Analizador de Repuestos IA</h1>
+      <p>Si ves este mensaje, ¡tu aplicación ya está funcionando correctamente!</p>
+      <div style={{ 
+        padding: '20px', 
+        backgroundColor: 'white', 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+      }}>
+        <input type="file" accept="image/*" />
+        <button style={{ marginLeft: '10px', padding: '5px 15px' }}>Analizar Lista</button>
+      </div>
     </div>
   );
 }
