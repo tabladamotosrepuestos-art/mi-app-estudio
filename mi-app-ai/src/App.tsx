@@ -15,6 +15,8 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
   const fichaRef = useRef<HTMLDivElement>(null);
   const foto = bancoFotos[producto.sku.toLowerCase().trim()];
   const precioBase = producto.costo * (1 + producto.rent / 100);
+  
+  // Cálculo automático basado en las REGLAS %
   const reglaPack = [...reglasPack].sort((a, b) => b.x - a.x).find(r => producto.cantidad >= r.x);
   const descFinal = reglaPack ? reglaPack.y : producto.descuentoManual;
   const unitarioFinal = precioBase * (1 - descFinal / 100);
@@ -28,7 +30,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
           try {
             const data = [new ClipboardItem({ [blob.type]: blob })];
             await navigator.clipboard.write(data);
-            alert("✅ Imagen copiada al portapapeles.");
+            alert("✅ Imagen copiada.");
           } catch (err) { alert("Error al copiar."); }
         }
       }, 'image/png');
@@ -54,7 +56,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
         </div>
       </div>
 
-      {/* DISEÑO DE LA FICHA (CAPTURA) */}
+      {/* DISEÑO DE LA FICHA */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
@@ -118,7 +120,13 @@ export default function App() {
   const [bancoFotos, setBancoFotos] = useState<Record<string, string>>({});
   const [logoEmpresa, setLogoEmpresa] = useState<string | null>(null);
   const [logoMarca, setLogoMarca] = useState<string | null>(null);
-  const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 7, y: 15 }, { x: 12, y: 20 }]);
+  
+  // REGLAS % RESTAURADAS
+  const [reglasPack, setReglasPack] = useState<Regla[]>([
+    { x: 3, y: 10 }, 
+    { x: 7, y: 15 }, 
+    { x: 12, y: 20 }
+  ]);
 
   const procesarSku = (sku: string) => {
     const c = sku.trim(); if (!c) return;
@@ -135,10 +143,25 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif' }}>
-      {/* PANEL IZQUIERDO FIJO */}
       <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
         
+        {/* REGLAS % */}
+        <div style={{ marginBottom: '30px', background: '#f9f9f9', padding: '15px', borderRadius: '15px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px', textTransform: 'uppercase' }}>Reglas %</p>
+          {reglasPack.map((r, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <input type="number" value={r.x} onChange={e => {
+                const newR = [...reglasPack]; newR[idx].x = parseInt(e.target.value); setReglasPack(newR);
+              }} style={{ width: '50px', padding: '5px', borderRadius: '8px', border: '1px solid #ddd', textAlign: 'center' }} />
+              <span style={{ fontSize: '12px' }}>un. →</span>
+              <input type="number" value={r.y} onChange={e => {
+                const newR = [...reglasPack]; newR[idx].y = parseInt(e.target.value); setReglasPack(newR);
+              }} style={{ width: '60px', padding: '5px', borderRadius: '8px', border: '1px solid #ddd', textAlign: 'center', color: '#d90429', fontWeight: 'bold' }} />
+            </div>
+          ))}
+        </div>
+
         <div style={{ marginBottom: '20px' }}>
           <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>LOGO EMPRESA (Abajo blanco)</p>
           <input type="file" onChange={(e) => {
@@ -178,14 +201,13 @@ export default function App() {
         <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #ddd' }}>🗑️ LIMPIAR PANTALLA</button>
       </aside>
 
-      {/* ÁREA CENTRAL DE TRABAJO */}
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto 40px' }}>
           <textarea 
             value={skuInput} 
             onChange={(e) => setSkuInput(e.target.value)} 
-            placeholder="SKUs..." 
-            style={{ width: '100%', height: '100px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', fontSize: '16px', marginBottom: '15px', outline: 'none' }} 
+            placeholder="Escribí o pegá SKUs aquí..." 
+            style={{ width: '100%', height: '100px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', fontSize: '16px', marginBottom: '15px' }} 
           />
           <button 
             onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} 
