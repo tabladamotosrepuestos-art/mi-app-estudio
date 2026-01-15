@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface Regla { x: number; y: number; }
 interface Producto {
@@ -58,6 +57,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
           {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '60px', maxWidth: '110px', objectFit: 'contain' }} />}
+          
           <div style={{ position: 'absolute', top: '80px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {descFinal > 0 && (
               <div style={{ background: '#d90429', color: 'white', width: '55px', height: '55px', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>
@@ -65,10 +65,18 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
                 <span style={{ fontSize: '16px' }}>{descFinal}%</span>
               </div>
             )}
+            {producto.cantidad > 1 && (
+              <div style={{ background: 'black', color: 'white', width: '55px', height: '55px', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>
+                <span style={{ fontSize: '7px' }}>LLEVANDO</span>
+                <span style={{ fontSize: '16px' }}>x{producto.cantidad}</span>
+              </div>
+            )}
           </div>
+
           {logoEmpresa && <img src={logoEmpresa} alt="empresa" style={{ position: 'absolute', bottom: '15px', right: '15px', height: '55px', maxWidth: '110px', objectFit: 'contain' }} />}
           {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>Sin Foto</div>}
         </div>
+        
         <div style={{ backgroundColor: 'black', padding: '25px', color: 'white' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
             <div style={{ flex: 1, paddingRight: '10px' }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900', lineHeight: '1.2' }}>{producto.nombre}</h4></div>
@@ -77,15 +85,21 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
               <div style={{ fontSize: '26px', color: '#d90429', fontWeight: '900' }}>${unitarioFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</div>
             </div>
           </div>
+
           <div style={{ backgroundColor: '#d90429', borderRadius: '22px', padding: '18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: '9px', fontWeight: 'bold', marginBottom: '5px' }}>PRECIO BAJA A</div>
-                <div style={{ fontSize: '30px', fontWeight: '900', color: 'white', lineHeight: '1' }}>${unitarioFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })} <span style={{ fontSize: '12px' }}>c/u</span></div>
+                <div style={{ fontSize: '30px', fontWeight: '900', color: 'white', lineHeight: '1' }}>
+                  ${unitarioFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                  <span style={{ fontSize: '12px', marginLeft: '4px' }}>c/u</span>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.8 }}>VALOR TOTAL</div>
-                <div style={{ fontSize: '16px', fontWeight: '900', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '10px', marginTop: '5px' }}>${(unitarioFinal * producto.cantidad).toLocaleString('es-AR', { maximumFractionDigits: 0 })}</div>
+                <div style={{ fontSize: '16px', fontWeight: '900', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '10px', marginTop: '5px' }}>
+                  ${(unitarioFinal * producto.cantidad).toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                </div>
               </div>
             </div>
           </div>
@@ -104,19 +118,7 @@ export default function App() {
   const [logoMarca, setLogoMarca] = useState<string | null>(null);
   const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 7, y: 15 }, { x: 12, y: 20 }]);
   const [scanning, setScanning] = useState(false);
-
-  // LÓGICA DE ESCANEO
-  useEffect(() => {
-    if (scanning) {
-      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-      scanner.render((decodedText) => {
-        procesarSku(decodedText);
-        setScanning(false);
-        scanner.clear();
-      }, () => {});
-      return () => scanner.clear();
-    }
-  }, [scanning]);
+  const scannerRef = useRef<any>(null);
 
   const procesarSku = (sku: string) => {
     const c = sku.trim(); if (!c) return;
@@ -131,18 +133,38 @@ export default function App() {
     }, ...prev]);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (s: string) => void) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader(); reader.onloadend = () => setter(reader.result as string);
-    reader.readAsDataURL(file);
+  const toggleScanner = async () => {
+    if (scanning) {
+      if (scannerRef.current) await scannerRef.current.clear();
+      setScanning(false);
+    } else {
+      setScanning(true);
+      setTimeout(() => {
+        // @ts-ignore
+        const html5QrCode = new window.Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+        scannerRef.current = html5QrCode;
+        html5QrCode.render((text: string) => {
+          procesarSku(text);
+          html5QrCode.clear();
+          setScanning(false);
+        }, () => {});
+      }, 500);
+    }
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
+      {/* Script dinámico para evitar error de compilación */}
+      <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+      
       <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA</p><input type="file" onChange={(e) => handleLogoUpload(e, setLogoEmpresa)} /></div>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA</p><input type="file" onChange={(e) => handleLogoUpload(e, setLogoMarca)} /></div>
+        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA</p><input type="file" onChange={(e) => {
+          const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); }
+        }} /></div>
+        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA</p><input type="file" onChange={(e) => {
+          const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); }
+        }} /></div>
         <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (!f) return;
           const r = new FileReader(); r.onload = (evt) => {
@@ -165,17 +187,13 @@ export default function App() {
 
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto 40px', textAlign: 'center' }}>
-          {/* BOTÓN DE ESCANEO */}
-          <button onClick={() => setScanning(!scanning)} style={{ marginBottom: '15px', padding: '12px 25px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button onClick={toggleScanner} style={{ marginBottom: '15px', padding: '12px 25px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
             {scanning ? "❌ CERRAR CÁMARA" : "📷 ESCANEAR CÓDIGO"}
           </button>
-          
           {scanning && <div id="reader" style={{ width: '100%', marginBottom: '20px', borderRadius: '15px', overflow: 'hidden' }}></div>}
-
           <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px' }} />
           <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold' }}>GENERAR FICHAS</button>
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack} logoEmpresa={logoEmpresa} logoMarca={logoMarca}
