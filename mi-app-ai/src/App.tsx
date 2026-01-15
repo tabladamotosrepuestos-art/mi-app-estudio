@@ -120,6 +120,15 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const scannerRef = useRef<any>(null);
 
+  // Aseguramos que la librería se cargue en el navegador
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/html5-qrcode";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, []);
+
   const procesarSku = (sku: string) => {
     const c = sku.trim(); if (!c) return;
     const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
@@ -135,28 +144,36 @@ export default function App() {
 
   const toggleScanner = async () => {
     if (scanning) {
-      if (scannerRef.current) await scannerRef.current.clear();
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.stop();
+        } catch (e) { console.log(e); }
+      }
       setScanning(false);
     } else {
       setScanning(true);
       setTimeout(() => {
         // @ts-ignore
-        const html5QrCode = new window.Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+        const html5QrCode = new window.Html5Qrcode("reader");
         scannerRef.current = html5QrCode;
-        html5QrCode.render((text: string) => {
-          procesarSku(text);
-          html5QrCode.clear();
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (text: string) => {
+            procesarSku(text);
+            html5QrCode.stop().then(() => setScanning(false));
+          },
+          () => {}
+        ).catch(() => {
+          alert("No se pudo acceder a la cámara. Verificá los permisos.");
           setScanning(false);
-        }, () => {});
-      }, 500);
+        });
+      }, 300);
     }
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
-      {/* Script dinámico para evitar error de compilación */}
-      <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-      
       <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
         <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA</p><input type="file" onChange={(e) => {
@@ -190,9 +207,9 @@ export default function App() {
           <button onClick={toggleScanner} style={{ marginBottom: '15px', padding: '12px 25px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
             {scanning ? "❌ CERRAR CÁMARA" : "📷 ESCANEAR CÓDIGO"}
           </button>
-          {scanning && <div id="reader" style={{ width: '100%', marginBottom: '20px', borderRadius: '15px', overflow: 'hidden' }}></div>}
-          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px' }} />
-          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold' }}>GENERAR FICHAS</button>
+          {scanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71' }}></div>}
+          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd' }} />
+          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR FICHAS</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
           {items.map(item => (
