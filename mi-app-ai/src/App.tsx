@@ -120,13 +120,12 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const scannerRef = useRef<any>(null);
 
-  // Aseguramos que la librería se cargue en el navegador
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://unpkg.com/html5-qrcode";
     script.async = true;
     document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
+    return () => { try { document.body.removeChild(script); } catch(e){} };
   }, []);
 
   const procesarSku = (sku: string) => {
@@ -145,30 +144,34 @@ export default function App() {
   const toggleScanner = async () => {
     if (scanning) {
       if (scannerRef.current) {
-        try {
-          await scannerRef.current.stop();
-        } catch (e) { console.log(e); }
+        try { await scannerRef.current.stop(); } catch (e) {}
       }
       setScanning(false);
     } else {
       setScanning(true);
       setTimeout(() => {
-        // @ts-ignore
-        const html5QrCode = new window.Html5Qrcode("reader");
-        scannerRef.current = html5QrCode;
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          (text: string) => {
-            procesarSku(text);
-            html5QrCode.stop().then(() => setScanning(false));
-          },
-          () => {}
-        ).catch(() => {
-          alert("No se pudo acceder a la cámara. Verificá los permisos.");
+        try {
+          // @ts-ignore
+          const html5QrCode = new window.Html5Qrcode("reader");
+          scannerRef.current = html5QrCode;
+          html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 15, qrbox: { width: 250, height: 250 } },
+            (text: string) => {
+              procesarSku(text);
+              html5QrCode.stop().then(() => setScanning(false));
+            },
+            () => {}
+          ).catch((err: any) => {
+            console.error(err);
+            alert("No se pudo abrir la cámara. Asegurate de dar permisos en el navegador y usar HTTPS.");
+            setScanning(false);
+          });
+        } catch (e) {
+          alert("La librería de cámara aún no cargó. Reintentá en un segundo.");
           setScanning(false);
-        });
-      }, 300);
+        }
+      }, 500);
     }
   };
 
@@ -207,7 +210,7 @@ export default function App() {
           <button onClick={toggleScanner} style={{ marginBottom: '15px', padding: '12px 25px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
             {scanning ? "❌ CERRAR CÁMARA" : "📷 ESCANEAR CÓDIGO"}
           </button>
-          {scanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71' }}></div>}
+          {scanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71', background: '#000' }}></div>}
           <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd' }} />
           <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR FICHAS</button>
         </div>
