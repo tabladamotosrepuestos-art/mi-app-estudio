@@ -8,7 +8,7 @@ interface Producto {
   cantidad: number; descuentoManual: number;
 }
 
-// --- COMPONENTE DE LA FICHA (DISEÑO ORIGINAL RESTAURADO) ---
+// --- COMPONENTE DE LA FICHA (DISEÑO FIEL AL PDF) ---
 const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpresa, logoMarca, onUpdate, onDelete }: {
   producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[], reglaCaja: Regla,
   logoEmpresa: string | null, logoMarca: string | null,
@@ -30,7 +30,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '380px' }}>
-      {/* Selector de Cantidades */}
       <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '15px', border: '1px solid #eee' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#666' }}>CANTIDAD</span>
@@ -46,11 +45,9 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
         </div>
       </div>
 
-      {/* Ficha Visual (Estilo PDF Original) */}
       <div ref={fichaRef} className="area-captura" style={{ backgroundColor: 'white', borderRadius: '30px', overflow: 'hidden', border: '1px solid #eee', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
-          
           {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '60px', maxWidth: '110px', objectFit: 'contain' }} />}
           
           <div style={{ position: 'absolute', top: '80px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -69,8 +66,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
           </div>
 
           {logoEmpresa && <img src={logoEmpresa} alt="empresa" style={{ position: 'absolute', bottom: '15px', right: '15px', height: '55px', maxWidth: '110px', objectFit: 'contain' }} />}
-          
-          {/* Foto sin efectos para máxima claridad */}
           {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>SIN FOTO</div>}
         </div>
         
@@ -115,6 +110,9 @@ export default function App() {
   const [logoMarca, setLogoMarca] = useState<string | null>(null);
   const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 6, y: 15 }, { x: 12, y: 20 }]);
   const [reglaCaja, setReglaCaja] = useState<Regla>({ x: 50, y: 25 });
+  const [whatsapp, setWhatsapp] = useState("3513755526");
+  const [instagram, setInstagram] = useState("tablada_motos");
+  const [tiktok, setTiktok] = useState("tablada_motos_tiktok");
   const [isDragging, setIsDragging] = useState(false);
 
   const procesarArchivo = (file: File) => {
@@ -158,6 +156,10 @@ export default function App() {
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(30); pdf.setFont("helvetica", "bold");
     pdf.text("CATÁLOGO DE OFERTAS", pW/2, pH/2 + 30, { align: 'center' });
+    pdf.setFontSize(14); pdf.setFont("helvetica", "normal");
+    pdf.text(`WhatsApp: ${whatsapp}`, pW/2, pH/2 + 50, { align: 'center' });
+    pdf.text(`Instagram: @${instagram}`, pW/2, pH/2 + 60, { align: 'center' });
+    pdf.text(`TikTok: @${tiktok}`, pW/2, pH/2 + 70, { align: 'center' });
 
     const fichas = document.querySelectorAll('.area-captura');
     const mX = 10, mY = 15;
@@ -179,6 +181,13 @@ export default function App() {
       <aside style={{ width: '320px', background: 'white', padding: '25px', borderRight: '1px solid #ddd', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900' }}>STUDIO IA</h2>
         
+        <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '15px', marginBottom: '15px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 'bold' }}>REDES PORTADA</p>
+          <input type="text" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="WhatsApp" style={{ width: '100%', marginBottom: '5px' }} />
+          <input type="text" value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="Instagram" style={{ width: '100%', marginBottom: '5px' }} />
+          <input type="text" value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="TikTok" style={{ width: '100%' }} />
+        </div>
+
         <div style={{ background: '#f0f0f0', padding: '15px', borderRadius: '15px', marginBottom: '15px' }}>
           <p style={{ fontSize: '10px', fontWeight: 'bold' }}>📦 REGLA CAJA</p>
           <div style={{ display: 'flex', gap: '5px' }}>
@@ -200,21 +209,21 @@ export default function App() {
         <button onClick={generarPDF} style={{ width: '100%', padding: '15px', background: 'black', color: 'white', borderRadius: '15px', fontWeight: 'bold', marginBottom: '15px', border: 'none', cursor: 'pointer' }}>📑 GENERAR PDF</button>
 
         <div style={{ fontSize: '11px', color: '#666' }}>
-          <p>LOGO EMPRESA / MARCA</p>
+          <p>LOGOS (EMPRESA / MARCA)</p>
           <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); } }} />
           <input type="file" style={{marginTop: '5px'}} onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); } }} />
-          <p style={{marginTop: '10px'}}>EXCEL</p>
+          <p style={{marginTop: '10px'}}>EXCEL PRECIOS</p>
           <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (evt) => { const wb = XLSX.read(evt.target?.result, { type: 'binary' }); setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])); }; r.readAsBinaryString(f); }} />
         </div>
 
         <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop}
           style={{ marginTop: '20px', padding: '30px 10px', background: isDragging ? '#ffebee' : '#d90429', color: 'white', borderRadius: '20px', textAlign: 'center', cursor: 'pointer' }}>
-          {isDragging ? "SUELTA" : "📁 ARRASTRA FOTOS"}
+          {isDragging ? "SUELTA LA CARPETA" : "📁 ARRASTRA FOTOS AQUÍ"}
         </div>
       </aside>
 
       <main style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
-        <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pegar SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '15px', border: '1px solid #ddd' }} />
+        <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega tus SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '15px', border: '1px solid #ddd' }} />
         <button onClick={() => { skuInput.split('\n').forEach(s => {
           const c = s.trim(); if (!c) return;
           const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
