@@ -37,7 +37,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
-      {/* PANEL DE CONTROL (Restaurado para editar cantidades) */}
+      {/* PANEL DE CONTROL (RESTAURADO) */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '15px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>CONTROL</span>
@@ -164,57 +164,47 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className="layout">
       <style>{`
-        .app-container { display: flex; height: 100vh; background: #f4f7f9; font-family: sans-serif; overflow: hidden; }
-        aside { width: 340px; background: white; padding: 30px; border-right: 1px solid #e0e6ed; overflow-y: auto; flex-shrink: 0; }
-        main { flex: 1; padding: 40px; overflow-y: auto; }
-        .grid-fichas { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px; }
+        .layout { display: flex; height: 100vh; background: #f4f7f9; font-family: sans-serif; overflow: hidden; }
+        .sidebar { width: 340px; background: white; padding: 25px; border-right: 1px solid #e0e6ed; overflow-y: auto; flex-shrink: 0; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .grid-fichas { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 25px; padding-bottom: 50px; }
         
         @media (max-width: 768px) {
-          .app-container { flex-direction: column; overflow-y: auto; height: auto; }
-          aside { width: 100%; border-right: none; border-bottom: 1px solid #e0e6ed; height: auto; padding: 20px; }
-          main { padding: 20px; }
+          .layout { flex-direction: column; overflow-y: auto; height: auto; }
+          .sidebar { width: 100%; border-right: none; border-bottom: 2px solid #eee; height: auto; padding: 20px; box-sizing: border-box; }
+          .main-content { padding: 15px; width: 100%; box-sizing: border-box; }
           .grid-fichas { grid-template-columns: 1fr; }
         }
       `}</style>
       
-      <aside>
-        <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA (Abajo)</p><input type="file" onChange={(e) => {
-          const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); }
-        }} /></div>
-        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA (Arriba)</p><input type="file" onChange={(e) => {
-          const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); }
-        }} /></div>
-        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p><input type="file" onChange={(e) => {
-          const f = e.target.files?.[0]; if (!f) return;
-          const r = new FileReader(); r.onload = (evt) => {
-            const wb = XLSX.read(evt.target?.result, { type: 'binary' });
-            setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-          }; r.readAsBinaryString(f);
-        }} /></div>
-        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px', fontSize: '14px' }}>
-          📷 CARGAR FOTOS PRODUCTOS
-          <input type="file" hidden multiple onChange={(e) => {
-            const files = e.target.files; if (!files) return;
-            Array.from(files).forEach(f => {
-              const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string }));
-              r.readAsDataURL(f);
-            });
-          }} />
+      <div className="sidebar">
+        <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '20px' }}>STUDIO IA</h2>
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); } }} />
+        </div>
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); } }} />
+        </div>
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (evt) => { const wb = XLSX.read(evt.target?.result, { type: 'binary' }); setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])); }; r.readAsBinaryString(f); }} />
+        </div>
+        <label style={{ display: 'block', padding: '12px', background: '#d90429', color: 'white', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>
+          📷 CARGAR FOTOS
+          <input type="file" hidden multiple onChange={(e) => { const files = e.target.files; if (!files) return; Array.from(files).forEach(f => { const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string })); r.readAsDataURL(f); }); }} />
         </label>
-        <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #ddd' }}>🗑️ LIMPIAR PANTALLA</button>
-      </aside>
+        <button onClick={() => setItems([])} style={{ width: '100%', padding: '10px', background: '#f8f9fa', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #ddd' }}>🗑️ LIMPIAR</button>
+      </div>
 
-      <main>
-        <div style={{ maxWidth: '600px', margin: '0 auto 40px', textAlign: 'center' }}>
-          <button onClick={toggleScanner} style={{ width: '100%', marginBottom: '15px', padding: '15px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
+      <div className="main-content">
+        <div style={{ maxWidth: '500px', margin: '0 auto 30px', textAlign: 'center' }}>
+          <button onClick={toggleScanner} style={{ width: '100%', marginBottom: '10px', padding: '15px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px' }}>
             {scanning ? "❌ CERRAR CÁMARA" : "📷 ESCANEAR CÓDIGO"}
           </button>
-          {scanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71', background: '#000' }}></div>}
-          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Escribí o pega SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', fontSize: '16px' }} />
-          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>GENERAR FICHAS</button>
+          {scanning && <div id="reader" style={{ width: '100%', maxWidth: '350px', margin: '0 auto 15px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71' }}></div>}
+          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs aquí..." style={{ width: '100%', height: '60px', borderRadius: '15px', padding: '15px', border: '1px solid #ddd', fontSize: '16px' }} />
+          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '12px', fontWeight: 'bold' }}>GENERAR FICHAS</button>
         </div>
         
         <div className="grid-fichas">
@@ -224,7 +214,7 @@ export default function App() {
                            onDelete={() => setItems(items.filter(i => i.id !== item.id))} />
           ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 }
