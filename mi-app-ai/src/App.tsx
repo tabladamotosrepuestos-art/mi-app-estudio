@@ -8,20 +8,19 @@ interface Producto {
   cantidad: number; descuentoManual: number;
 }
 
-const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }: {
-  producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[],
+const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarca, onUpdate, onDelete }: {
+  producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[], 
+  logoEmpresa: string | null, logoMarca: string | null,
   onUpdate: (p: Producto) => void, onDelete: () => void
 }) => {
   const fichaRef = useRef<HTMLDivElement>(null);
   const foto = bancoFotos[producto.sku.toLowerCase().trim()];
   const precioBase = producto.costo * (1 + producto.rent / 100);
   
-  // LÓGICA DE CÁLCULO DE PACK
   const reglaPack = [...reglasPack].sort((a, b) => b.x - a.x).find(r => producto.cantidad >= r.x);
   const descFinal = reglaPack ? reglaPack.y : producto.descuentoManual;
   const unitarioFinal = precioBase * (1 - descFinal / 100);
 
-  // FUNCIÓN PARA COPIAR AL PORTAPAPELES (IDEAL PARA WHATSAPP)
   const copiarImagen = async () => {
     const html2canvas = (await import('html2canvas')).default;
     if (fichaRef.current) {
@@ -31,10 +30,8 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
           try {
             const data = [new ClipboardItem({ [blob.type]: blob })];
             await navigator.clipboard.write(data);
-            alert("✅ Imagen copiada. ¡Ya podés pegarla en WhatsApp!");
-          } catch (err) {
-            alert("Error al copiar. Intentá descargándola.");
-          }
+            alert("✅ Imagen copiada al portapapeles.");
+          } catch (err) { alert("Error al copiar."); }
         }
       }, 'image/png');
     }
@@ -45,7 +42,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
     if (fichaRef.current) {
       const canvas = await html2canvas(fichaRef.current, { useCORS: true, scale: 2, backgroundColor: '#ffffff' });
       const link = document.createElement('a');
-      link.download = `Ficha-${producto.sku}-x${producto.cantidad}.png`;
+      link.download = `Ficha-${producto.sku}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }
@@ -53,7 +50,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px' }}>
-      {/* PANEL DE CONTROL SUPERIOR */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
@@ -71,11 +67,13 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
         </div>
       </div>
 
-      {/* DISEÑO DE LA FICHA */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
           
+          {/* Logo de Marca (Arriba Centro-Derecha) */}
+          {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '20px', right: '85px', height: '35px', maxWidth: '70px', objectFit: 'contain' }} />}
+
           <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {descFinal > 0 && (
               <div style={{ background: '#d90429', color: 'white', width: '55px', height: '55px', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>
@@ -91,12 +89,15 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
             )}
           </div>
           
-          {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>Cargar Foto</div>}
+          {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>Sin Foto</div>}
         </div>
         
-        <div style={{ backgroundColor: 'black', padding: '25px', color: 'white' }}>
+        <div style={{ backgroundColor: 'black', padding: '25px', color: 'white', position: 'relative' }}>
+          {/* Logo Empresa (Abajo Derecha en bloque negro) */}
+          {logoEmpresa && <img src={logoEmpresa} alt="empresa" style={{ position: 'absolute', bottom: '15px', right: '20px', height: '25px', maxWidth: '60px', objectFit: 'contain', opacity: 0.9 }} />}
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-            <div style={{ flex: 1 }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900', lineHeight: '1.2' }}>{producto.nombre}</h4></div>
+            <div style={{ flex: 1, paddingRight: '40px' }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900', lineHeight: '1.2' }}>{producto.nombre}</h4></div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '10px', textDecoration: 'line-through', color: '#555' }}>${precioBase.toLocaleString('es-AR')}</div>
               <div style={{ fontSize: '26px', color: '#d90429', fontWeight: '900' }}>${unitarioFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</div>
@@ -131,6 +132,8 @@ export default function App() {
   const [items, setItems] = useState<Producto[]>([]);
   const [dbPrecios, setDbPrecios] = useState<any[]>([]);
   const [bancoFotos, setBancoFotos] = useState<Record<string, string>>({});
+  const [logoEmpresa, setLogoEmpresa] = useState<string | null>(null);
+  const [logoMarca, setLogoMarca] = useState<string | null>(null);
   const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 7, y: 15 }, { x: 12, y: 20 }]);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -141,23 +144,24 @@ export default function App() {
     return () => window.removeEventListener('resize', checkSize);
   }, []);
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (s: string) => void) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setter(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const agregar = () => {
     skuInput.split('\n').forEach(s => {
       const c = s.trim(); if (!c) return;
       const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
-      
-      const nombreExtraido = info ? (info["NOMBRE "] || info["NOMBRE"] || "PRODUCTO") : "PRODUCTO";
-      const costoExtraido = info ? (parseFloat(info["costo"]) || 0) : 0;
-      const rentExtraida = info ? (parseFloat(info["rentabilidad "]) || parseFloat(info["rentabilidad"]) || 0) : 0;
-
       setItems(prev => [{
         id: Date.now() + Math.random(),
         sku: c,
-        nombre: nombreExtraido,
-        costo: costoExtraido,
-        rent: rentExtraida,
-        cantidad: 1,
-        descuentoManual: 0
+        nombre: info ? (info["NOMBRE "] || info["NOMBRE"] || "PRODUCTO") : "PRODUCTO",
+        costo: info ? (parseFloat(info["costo"]) || 0) : 0,
+        rent: info ? (parseFloat(info["rentabilidad "]) || 0) : 0,
+        cantidad: 1, descuentoManual: 0
       }, ...prev]);
     });
     setSkuInput("");
@@ -167,6 +171,17 @@ export default function App() {
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
       <aside style={{ width: isMobile ? '100%' : '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto', flexShrink: 0 }}>
         <h2 style={{ color: '#d90429', fontSize: '22px', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
+        
+        <div style={{ marginBottom: '20px' }}>
+           <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>LOGO EMPRESA (Abajo)</p>
+           <input type="file" accept="image/*" onChange={(e) => handleLogoUpload(e, setLogoEmpresa)} style={{fontSize: '11px'}} />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+           <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>LOGO MARCA (Arriba)</p>
+           <input type="file" accept="image/*" onChange={(e) => handleLogoUpload(e, setLogoMarca)} style={{fontSize: '11px'}} />
+        </div>
+
         <div style={{ marginBottom: '25px' }}>
            <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>EXCEL BASE</p>
            <input type="file" onChange={(e) => {
@@ -179,6 +194,7 @@ export default function App() {
              r.readAsBinaryString(f);
            }} />
         </div>
+
         <div style={{ marginBottom: '25px' }}>
            <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>REGLAS %</p>
            {reglasPack.map((r, i) => (
@@ -189,8 +205,9 @@ export default function App() {
              </div>
            ))}
         </div>
+
         <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px' }}>
-          📷 CARGAR FOTOS
+          📷 CARGAR FOTOS PRODUCTOS
           <input type="file" hidden multiple onChange={(e) => {
             const files = e.target.files; if (!files) return;
             Array.from(files).forEach(f => {
@@ -200,10 +217,9 @@ export default function App() {
           }} />
         </label>
         
-        {/* BOTÓN LIMPIAR TODO */}
         <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', color: '#666', border: '1px solid #ddd', borderRadius: '15px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>🗑️ LIMPIAR PANTALLA</button>
       </aside>
-      
+
       <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto 40px' }}>
            <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega los SKUs aquí..." 
@@ -213,6 +229,7 @@ export default function App() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', justifyItems: 'center' }}>
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack}
+                           logoEmpresa={logoEmpresa} logoMarca={logoMarca}
                            onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))}
                            onDelete={() => setItems(items.filter(i => i.id !== item.id))} />
           ))}
