@@ -28,7 +28,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
           try {
             const data = [new ClipboardItem({ [blob.type]: blob })];
             await navigator.clipboard.write(data);
-            alert("✅ Imagen copiada al portapapeles.");
+            alert("✅ Imagen copiada.");
           } catch (err) { alert("Error al copiar."); }
         }
       }, 'image/png');
@@ -36,25 +36,25 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
   };
 
   return (
-    <div className="ficha-contenedor" style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
-      {/* PANEL DE CONTROL DE LA FICHA */}
-      <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
+      {/* PANEL DE CONTROL (Restaurado para editar cantidades) */}
+      <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '15px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
-          <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <button onClick={copiarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '8px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>📋 COPIAR</button>
-            <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ddd', fontSize: '18px' }}>✕</button>
+          <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '10px', fontWeight: 'bold' }}>CONTROL</span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={copiarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>📋 COPIAR</button>
+            <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ccc', fontSize: '20px' }}>✕</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '5px' }}>
           {[1, 3, 6, 12].map(n => (
             <button key={n} onClick={() => onUpdate({...producto, cantidad: n})} 
-              style={{ flex: 1, padding: '12px 0', borderRadius: '12px', border: 'none', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: producto.cantidad === n ? '#d90429' : '#f0f0f0', color: producto.cantidad === n ? 'white' : '#666' }}>x{n}</button>
+              style={{ flex: 1, padding: '10px 0', borderRadius: '10px', border: 'none', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: producto.cantidad === n ? '#d90429' : '#f0f0f0', color: producto.cantidad === n ? 'white' : '#666' }}>x{n}</button>
           ))}
         </div>
       </div>
 
-      {/* DISEÑO DE LA FICHA (Lo que se copia) */}
+      {/* DISEÑO DE LA FICHA */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
@@ -181,20 +181,20 @@ export default function App() {
       
       <aside>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA (Abajo blanco)</p><input type="file" onChange={(e) => {
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA (Abajo)</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); }
         }} /></div>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA (Arriba esquina)</p><input type="file" onChange={(e) => {
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA (Arriba)</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); }
         }} /></div>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p><input type="file" onChange={(e) => {
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (!f) return;
           const r = new FileReader(); r.onload = (evt) => {
             const wb = XLSX.read(evt.target?.result, { type: 'binary' });
             setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
           }; r.readAsBinaryString(f);
         }} /></div>
-        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px' }}>
+        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px', fontSize: '14px' }}>
           📷 CARGAR FOTOS PRODUCTOS
           <input type="file" hidden multiple onChange={(e) => {
             const files = e.target.files; if (!files) return;
