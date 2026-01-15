@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
-// --- DEFINICIÓN DE TIPOS ---
+// --- TIPOS ---
 interface Regla { x: number; y: number; }
 interface Producto {
   id: number; sku: string; nombre: string; costo: number; rent: number;
   cantidad: number; descuentoManual: number;
 }
 
-// --- COMPONENTE FICHA ---
+// --- COMPONENTE FICHA (DISEÑO PREMIUM RECUPERADO) ---
 const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }: {
   producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[],
   onUpdate: (p: Producto) => void, onDelete: () => void
@@ -21,17 +21,11 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
   const unitarioFinal = precioBase * (1 - descFinal / 100);
 
   const descargarImagen = async () => {
-    // Truco: Cargamos la librería dinámicamente para no romper el build de Vercel
     const html2canvas = (await import('html2canvas')).default;
-    
     if (fichaRef.current) {
-      const canvas = await html2canvas(fichaRef.current, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: '#ffffff'
-      });
+      const canvas = await html2canvas(fichaRef.current, { useCORS: true, scale: 2, backgroundColor: '#f4f7f9' });
       const link = document.createElement('a');
-      link.download = `${producto.sku}-${producto.nombre}.png`;
+      link.download = `Ficha-${producto.sku}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }
@@ -39,12 +33,13 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px' }}>
+      {/* EDITOR DE CANTIDADES */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={descargarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>💾 GUARDAR</button>
-            <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ddd' }}>✕</button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={descargarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '5px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>💾 GUARDAR</button>
+            <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ddd', fontSize: '18px' }}>✕</button>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -55,7 +50,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
         </div>
       </div>
 
-      {/* ESTO ES LO QUE SE DESCARGA */}
+      {/* FICHA VISUAL (EL DISEÑO QUE TE GUSTA) */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
@@ -65,13 +60,13 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
               <span style={{ fontSize: '16px' }}>{descFinal}%</span>
             </div>
           )}
-          {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>SIN IMAGEN</div>}
+          {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>Cargar Foto</div>}
         </div>
         <div style={{ backgroundColor: 'black', padding: '25px', color: 'white' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-            <div style={{ flex: 1 }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900' }}>{producto.nombre}</h4></div>
+            <div style={{ flex: 1 }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900', lineHeight: '1.2' }}>{producto.nombre}</h4></div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10px', textDecoration: 'line-through', color: '#555' }}>${precioBase.toFixed(0)}</div>
+              <div style={{ fontSize: '10px', textDecoration: 'line-through', color: '#555' }}>${precioBase.toLocaleString('es-AR')}</div>
               <div style={{ fontSize: '26px', color: '#d90429', fontWeight: '900' }}>${unitarioFinal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</div>
             </div>
           </div>
@@ -109,27 +104,27 @@ export default function App() {
     return () => window.removeEventListener('resize', checkSize);
   }, []);
 
-  const manejarFotos = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach(f => {
-      const r = new FileReader();
-      r.onloadend = () => {
-        const nom = f.name.split('.')[0].toLowerCase().trim();
-        setBancoFotos(prev => ({ ...prev, [nom]: r.result as string }));
-      };
-      r.readAsDataURL(f);
-    });
+  const manejarExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (evt) => {
+      const wb = XLSX.read(evt.target?.result, { type: 'binary' });
+      const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+      setDbPrecios(data);
+    };
+    r.readAsBinaryString(f);
   };
 
   const agregar = () => {
     skuInput.split('\n').forEach(s => {
       const c = s.trim(); if (!c) return;
+      // MAPEAREMOS LAS COLUMNAS EXACTAS DEL EXCEL
       const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
       setItems(prev => [{
         id: Date.now() + Math.random(),
         sku: c,
-        nombre: info?.["NOMBRE "] || "PRODUCTO",
+        nombre: info?.["NOMBRE "] || "PRODUCTO NUEVO",
         costo: parseFloat(info?.costo) || 0,
         rent: parseFloat(info?.["rentabilidad "]) || 0,
         cantidad: 1,
@@ -142,38 +137,47 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
       
+      {/* SIDEBAR RECUPERADO */}
       <aside style={{ width: isMobile ? '100%' : '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto', flexShrink: 0 }}>
-        <h2 style={{ color: '#d90429', fontSize: '20px', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        <input type="file" onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (!f) return;
-          const r = new FileReader();
-          r.onload = (evt) => {
-            const wb = XLSX.read(evt.target?.result, { type: 'binary' });
-            setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-          };
-          r.readAsBinaryString(f);
-        }} />
-        <div style={{ marginTop: '20px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>REGLAS %</p>
-          {reglasPack.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
-              <input type="number" value={r.x} onChange={(e) => { const n = [...reglasPack]; n[i].x = parseInt(e.target.value); setReglasPack(n); }} style={{ width: '45px' }} />
-              <input type="number" value={r.y} onChange={(e) => { const n = [...reglasPack]; n[i].y = parseInt(e.target.value); setReglasPack(n); }} style={{ flex: 1, color: '#d90429', fontWeight: 'bold' }} />
-            </div>
-          ))}
+        <h2 style={{ color: '#d90429', fontSize: '22px', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
+        
+        <div style={{ marginBottom: '25px' }}>
+           <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>EXCEL BASE</p>
+           <input type="file" onChange={manejarExcel} style={{ fontSize: '12px' }} />
         </div>
-        <label style={{ display: 'block', marginTop: '20px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold' }}>
-          📷 FOTOS
-          <input type="file" hidden multiple onChange={manejarFotos} accept="image/*" />
+
+        <div style={{ marginBottom: '25px' }}>
+           <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>REGLAS %</p>
+           {reglasPack.map((r, i) => (
+             <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', background: '#f8f9fa', padding: '10px', borderRadius: '12px' }}>
+                <input type="number" value={r.x} onChange={(e) => { const n = [...reglasPack]; n[i].x = parseInt(e.target.value) || 0; setReglasPack(n); }} style={{ width: '45px', border: '1px solid #ddd', borderRadius: '6px', textAlign: 'center' }} />
+                <span style={{fontSize:'10px', alignSelf:'center'}}>un. →</span>
+                <input type="number" value={r.y} onChange={(e) => { const n = [...reglasPack]; n[i].y = parseInt(e.target.value) || 0; setReglasPack(n); }} style={{ flex: 1, border: '1px solid #ddd', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', color: '#d90429' }} />
+             </div>
+           ))}
+        </div>
+
+        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+          📷 CARGAR FOTOS
+          <input type="file" hidden multiple onChange={(e) => {
+            const files = e.target.files; if (!files) return;
+            Array.from(files).forEach(f => {
+              const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string }));
+              r.readAsDataURL(f);
+            });
+          }} />
         </label>
       </aside>
 
+      {/* ÁREA DE TRABAJO */}
       <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
-        <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px' }} />
-        <button onClick={agregar} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold' }}>GENERAR</button>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', marginTop: '40px' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto 40px' }}>
+           <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega los SKUs aquí..." 
+                style={{ width: '100%', height: '80px', padding: '20px', borderRadius: '20px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} />
+           <button onClick={agregar} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR FICHAS</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', justifyItems: 'center' }}>
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack}
                            onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))}
