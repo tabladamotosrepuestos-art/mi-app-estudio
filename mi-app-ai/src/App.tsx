@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
-// --- DEFINICIÓN DE TIPOS ---
 interface Regla { x: number; y: number; }
 interface Producto {
-  id: number;
-  sku: string;
-  nombre: string;
-  costo: number;
-  rent: number;
-  cantidad: number;
-  descuentoManual: number;
+  id: number; sku: string; nombre: string; costo: number; rent: number;
+  cantidad: number; descuentoManual: number;
 }
 
 const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }: {
   producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[],
   onUpdate: (p: Producto) => void, onDelete: () => void
 }) => {
+  // Buscamos la foto limpiando espacios y minúsculas para que coincida siempre
   const foto = bancoFotos[producto.sku.toLowerCase().trim()];
   const precioBase = producto.costo * (1 + producto.rent / 100);
   const reglaPack = [...reglasPack].sort((a, b) => b.x - a.x).find(r => producto.cantidad >= r.x);
@@ -25,7 +20,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px' }}>
-      {/* PANEL DE CONTROL INDIVIDUAL */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>EN INVENTARIO</span>
@@ -40,7 +34,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
         </div>
       </div>
 
-      {/* FICHA VISUAL PREMIUM */}
       <div style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold', zIndex: 2 }}>SKU: {producto.sku}</div>
@@ -93,6 +86,19 @@ export default function App() {
     return () => window.removeEventListener('resize', checkSize);
   }, []);
 
+  const manejarFotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach(f => {
+      const r = new FileReader();
+      r.onloadend = () => {
+        const nombreArchivo = f.name.split('.')[0].toLowerCase().trim();
+        setBancoFotos(prev => ({ ...prev, [nombreArchivo]: r.result as string }));
+      };
+      r.readAsDataURL(f);
+    });
+  };
+
   const agregar = () => {
     skuInput.split('\n').forEach(s => {
       const c = s.trim(); if (!c) return;
@@ -113,7 +119,6 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
       
-      {/* SIDEBAR RECUPERADO */}
       <aside style={{ width: isMobile ? '100%' : '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto', flexShrink: 0 }}>
         <h2 style={{ color: '#d90429', fontSize: '20px', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
         
@@ -146,19 +151,16 @@ export default function App() {
            ))}
         </div>
 
-        <button style={{ width: '100%', padding: '15px', background: '#f8f9fa', border: '1px solid #eee', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
-           <input type="file" hidden multiple onChange={(e) => {
-             const files = e.target.files;
-             if (!files) return;
-             Array.from(files).forEach(f => {
-               const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string }));
-               r.readAsDataURL(f);
-             });
-           }} /> 📷 CARGAR FOTOS
-        </button>
+        {/* BOTÓN DE FOTOS REPARADO */}
+        <div style={{ position: 'relative', marginTop: '20px' }}>
+          <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+             📷 CARGAR FOTOS
+             <input type="file" hidden multiple onChange={manejarFotos} accept="image/*" />
+          </label>
+          <p style={{ fontSize: '9px', color: '#999', marginTop: '5px', textAlign: 'center' }}>{Object.keys(bancoFotos).length} fotos cargadas</p>
+        </div>
       </aside>
 
-      {/* ÁREA DE FICHAS */}
       <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto 40px', textAlign: 'center' }}>
            <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="01570&#10;01539" 
