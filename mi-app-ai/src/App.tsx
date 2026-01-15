@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
+// INTERFACES PARA EVITAR ERRORES DE COMPILACIÓN
 interface Regla { x: number; y: number; }
 interface Producto {
   id: number; sku: string; nombre: string; costo: number; rent: number;
@@ -19,6 +20,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
   const descFinal = reglaPack ? reglaPack.y : producto.descuentoManual;
   const unitarioFinal = precioBase * (1 - descFinal / 100);
 
+  // FUNCIÓN COPIAR PARA WHATSAPP
   const copiarImagen = async () => {
     const html2canvas = (await import('html2canvas')).default;
     if (fichaRef.current) {
@@ -69,10 +71,10 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
           
-          {/* LOGO MARCA: Más grande y en la esquina superior derecha */}
-          {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '55px', maxWidth: '100px', objectFit: 'contain' }} />}
+          {/* LOGO MARCA: Esquina superior derecha */}
+          {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '60px', maxWidth: '110px', objectFit: 'contain' }} />}
 
-          <div style={{ position: 'absolute', top: '75px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ position: 'absolute', top: '80px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {descFinal > 0 && (
               <div style={{ background: '#d90429', color: 'white', width: '55px', height: '55px', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>
                 <span style={{ fontSize: '8px' }}>AHORRA</span>
@@ -87,12 +89,13 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
             )}
           </div>
 
-          {/* LOGO EMPRESA: Ubicado en la parte blanca, abajo a la derecha de la foto */}
-          {logoEmpresa && <img src={logoEmpresa} alt="empresa" style={{ position: 'absolute', bottom: '15px', right: '15px', height: '50px', maxWidth: '100px', objectFit: 'contain' }} />}
+          {/* LOGO EMPRESA: Parte blanca inferior derecha */}
+          {logoEmpresa && <img src={logoEmpresa} alt="empresa" style={{ position: 'absolute', bottom: '15px', right: '15px', height: '55px', maxWidth: '110px', objectFit: 'contain' }} />}
           
           {foto ? <img src={foto} alt="prod" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <div style={{ color: '#eee', fontWeight: 'bold' }}>Sin Foto</div>}
         </div>
         
+        {/* BLOQUE NEGRO DE PRECIO */}
         <div style={{ backgroundColor: 'black', padding: '25px', color: 'white' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
             <div style={{ flex: 1, paddingRight: '10px' }}><h4 style={{ margin: 0, fontSize: '15px', textTransform: 'uppercase', fontWeight: '900', lineHeight: '1.2' }}>{producto.nombre}</h4></div>
@@ -181,6 +184,18 @@ export default function App() {
              }; r.readAsBinaryString(f);
            }} />
         </div>
+
+        {/* BOTÓN RESTAURADO: CARGAR FOTOS PRODUCTOS */}
+        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px' }}>
+          📷 CARGAR FOTOS PRODUCTOS
+          <input type="file" hidden multiple onChange={(e) => {
+            const files = e.target.files; if (!files) return;
+            Array.from(files).forEach(f => {
+              const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string }));
+              r.readAsDataURL(f);
+            });
+          }} />
+        </label>
 
         <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}>🗑️ LIMPIAR PANTALLA</button>
       </aside>
