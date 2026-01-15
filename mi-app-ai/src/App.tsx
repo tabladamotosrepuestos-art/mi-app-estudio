@@ -16,7 +16,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
   const foto = bancoFotos[producto.sku.toLowerCase().trim()];
   const precioBase = producto.costo * (1 + producto.rent / 100);
   
-  // Cálculo automático basado en las REGLAS %
   const reglaPack = [...reglasPack].sort((a, b) => b.x - a.x).find(r => producto.cantidad >= r.x);
   const descFinal = reglaPack ? reglaPack.y : producto.descuentoManual;
   const unitarioFinal = precioBase * (1 - descFinal / 100);
@@ -39,7 +38,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '380px' }}>
-      {/* PANEL DE CONTROL SUPERIOR */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
@@ -56,8 +54,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
         </div>
       </div>
 
-      {/* DISEÑO DE LA FICHA */}
-      <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
+      <div ref={fichaRef} className="area-captura" style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
           {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '60px', maxWidth: '110px', objectFit: 'contain' }} />}
@@ -120,13 +117,63 @@ export default function App() {
   const [bancoFotos, setBancoFotos] = useState<Record<string, string>>({});
   const [logoEmpresa, setLogoEmpresa] = useState<string | null>(null);
   const [logoMarca, setLogoMarca] = useState<string | null>(null);
+  const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 7, y: 15 }, { x: 12, y: 20 }]);
   
-  // REGLAS % RESTAURADAS
-  const [reglasPack, setReglasPack] = useState<Regla[]>([
-    { x: 3, y: 10 }, 
-    { x: 7, y: 15 }, 
-    { x: 12, y: 20 }
-  ]);
+  // Nuevos estados para contacto
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
+
+  const generarPDF = async () => {
+    const html2canvas = (await import('html2canvas')).default;
+    const { jsPDF } = await import('jspdf');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // 1. PORTADA CON REDES SOCIALES
+    pdf.setFillColor(217, 4, 41); 
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+    
+    if (logoEmpresa) {
+        pdf.addImage(logoEmpresa, 'PNG', pageWidth/2 - 40, pageHeight/2 - 70, 80, 80, undefined, 'FAST');
+    }
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(32);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("CATÁLOGO DE OFERTAS", pageWidth/2, pageHeight/2 + 30, { align: 'center' });
+    
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "normal");
+    
+    // Texto de contacto en portada
+    let yContact = pageHeight/2 + 50;
+    if (whatsapp) {
+        pdf.text(`WhatsApp: ${whatsapp}`, pageWidth/2, yContact, { align: 'center' });
+        yContact += 10;
+    }
+    if (instagram) {
+        pdf.text(`Instagram: @${instagram.replace('@', '')}`, pageWidth/2, yContact, { align: 'center' });
+    }
+
+    // 2. GRILLA DE FICHAS (6 por página)
+    const fichas = document.querySelectorAll('.area-captura');
+    const fichasPorPagina = 6;
+    const mX = 10, mY = 15;
+    const wF = (pageWidth - (mX * 3)) / 2;
+    const hF = (pageHeight - (mY * 4)) / 3;
+
+    for (let i = 0; i < fichas.length; i++) {
+        const canvas = await html2canvas(fichas[i] as HTMLElement, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        if (i % fichasPorPagina === 0) pdf.addPage();
+        
+        const col = i % 2;
+        const fila = Math.floor((i % fichasPorPagina) / 2);
+        pdf.addImage(imgData, 'PNG', mX + (col * (wF + mX)), mY + (fila * (hF + mY)), wF, hF);
+    }
+    pdf.save(`Catalogo_StudioIA.pdf`);
+  };
 
   const procesarSku = (sku: string) => {
     const c = sku.trim(); if (!c) return;
@@ -146,88 +193,50 @@ export default function App() {
       <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
         
+        {/* CAMPOS DE CONTACTO */}
+        <div style={{ marginBottom: '25px', background: '#f0f4f8', padding: '15px', borderRadius: '15px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#555', marginBottom: '10px' }}>CONTACTO PORTADA</p>
+          <input type="text" placeholder="WhatsApp" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '8px', fontSize: '12px' }} />
+          <input type="text" placeholder="Instagram" value={instagram} onChange={e => setInstagram(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '12px' }} />
+        </div>
+
         {/* REGLAS % */}
-        <div style={{ marginBottom: '30px', background: '#f9f9f9', padding: '15px', borderRadius: '15px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px', textTransform: 'uppercase' }}>Reglas %</p>
+        <div style={{ marginBottom: '25px', background: '#f9f9f9', padding: '15px', borderRadius: '15px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>REGLAS %</p>
           {reglasPack.map((r, idx) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <input type="number" value={r.x} onChange={e => {
-                const newR = [...reglasPack]; newR[idx].x = parseInt(e.target.value); setReglasPack(newR);
-              }} style={{ width: '50px', padding: '5px', borderRadius: '8px', border: '1px solid #ddd', textAlign: 'center' }} />
-              <span style={{ fontSize: '12px' }}>un. →</span>
-              <input type="number" value={r.y} onChange={e => {
-                const newR = [...reglasPack]; newR[idx].y = parseInt(e.target.value); setReglasPack(newR);
-              }} style={{ width: '60px', padding: '5px', borderRadius: '8px', border: '1px solid #ddd', textAlign: 'center', color: '#d90429', fontWeight: 'bold' }} />
+              <input type="number" value={r.x} onChange={e => { const n = [...reglasPack]; n[idx].x = parseInt(e.target.value); setReglasPack(n); }} style={{ width: '45px', padding: '4px', textAlign: 'center' }} />
+              <span style={{ fontSize: '11px' }}>u. →</span>
+              <input type="number" value={r.y} onChange={e => { const n = [...reglasPack]; n[idx].y = parseInt(e.target.value); setReglasPack(n); }} style={{ width: '55px', padding: '4px', textAlign: 'center', fontWeight: 'bold', color: '#d90429' }} />
             </div>
           ))}
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>LOGO EMPRESA (Abajo blanco)</p>
-          <input type="file" onChange={(e) => {
-            const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); }
-          }} />
+        <button onClick={generarPDF} style={{ width: '100%', padding: '15px', background: 'black', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '25px', border: 'none' }}>📑 GENERAR CATÁLOGO PDF</button>
+
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', color: '#aaa', fontWeight: 'bold' }}>LOGO EMPRESA</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); } }} />
+        </div>
+        <div style={{ marginBottom: '15px' }}><p style={{ fontSize: '10px', color: '#aaa', fontWeight: 'bold' }}>LOGO MARCA</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); } }} />
+        </div>
+        <div style={{ marginBottom: '25px' }}><p style={{ fontSize: '10px', color: '#aaa', fontWeight: 'bold' }}>EXCEL PRECIOS</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (evt) => { const wb = XLSX.read(evt.target?.result, { type: 'binary' }); setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])); }; r.readAsBinaryString(f); }} />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>LOGO MARCA (Arriba esquina)</p>
-          <input type="file" onChange={(e) => {
-            const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); }
-          }} />
-        </div>
-
-        <div style={{ marginBottom: '30px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '5px' }}>EXCEL BASE</p>
-          <input type="file" onChange={(e) => {
-            const f = e.target.files?.[0]; if (!f) return;
-            const r = new FileReader(); r.onload = (evt) => {
-              const wb = XLSX.read(evt.target?.result, { type: 'binary' });
-              setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-            }; r.readAsBinaryString(f);
-          }} />
-        </div>
-
-        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px' }}>
-          📷 CARGAR FOTOS PRODUCTOS
-          <input type="file" hidden multiple onChange={(e) => {
-            const files = e.target.files; if (!files) return;
-            Array.from(files).forEach(f => {
-              const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string }));
-              r.readAsDataURL(f);
-            });
-          }} />
-        </label>
-
-        <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #ddd' }}>🗑️ LIMPIAR PANTALLA</button>
+        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', marginBottom: '15px' }}>📷 CARGAR FOTOS <input type="file" hidden multiple onChange={(e) => { const files = e.target.files; if (!files) return; Array.from(files).forEach(f => { const r = new FileReader(); r.onloadend = () => setBancoFotos(prev => ({ ...prev, [f.name.split('.')[0].toLowerCase().trim()]: r.result as string })); r.readAsDataURL(f); }); }} /></label>
+        <button onClick={() => setItems([])} style={{ width: '100%', padding: '10px', background: '#eee', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>🗑️ LIMPIAR</button>
       </aside>
 
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto 40px' }}>
-          <textarea 
-            value={skuInput} 
-            onChange={(e) => setSkuInput(e.target.value)} 
-            placeholder="Escribí o pegá SKUs aquí..." 
-            style={{ width: '100%', height: '100px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', fontSize: '16px', marginBottom: '15px' }} 
-          />
-          <button 
-            onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} 
-            style={{ width: '100%', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '16px' }}>
-            GENERAR FICHAS
-          </button>
+          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '15px', border: '1px solid #ddd', marginBottom: '10px' }} />
+          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>GENERAR FICHAS</button>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
           {items.map(item => (
-            <FichaStudioIA 
-              key={item.id} 
-              producto={item} 
-              bancoFotos={bancoFotos} 
-              reglasPack={reglasPack} 
-              logoEmpresa={logoEmpresa} 
-              logoMarca={logoMarca}
-              onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))}
-              onDelete={() => setItems(items.filter(i => i.id !== item.id))} 
-            />
+            <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack} logoEmpresa={logoEmpresa} logoMarca={logoMarca} onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))} onDelete={() => setItems(items.filter(i => i.id !== item.id))} />
           ))}
         </div>
       </main>
