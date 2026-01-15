@@ -171,3 +171,51 @@ export default function App() {
     </div>
   );
 }
+const renderCard = (linea: string, index: number) => {
+    const cod = linea.trim(); // Quitamos espacios, mantenemos el formato del SKU (ej: 00001)
+    if (!cod) return null;
+
+    // Buscamos en el Excel usando la columna 'SKU'
+    const info = dbPrecios.find((p: any) => String(p.SKU).trim() === cod);
+
+    const foto = bancoFotos[cod.toLowerCase()]; // Las fotos suelen estar en minúsculas
+    
+    // Usamos los nombres reales de tus columnas: 'costo' y 'NOMBRE '
+    const precioBase = parseFloat(info?.costo) || 0;
+    const descripcion = info?.["NOMBRE "] || "PRODUCTO NO ENCONTRADO";
+
+    // Aplicamos la Oferta Global sobre el costo
+    const precioFinal = precioBase * (1 - ofertaGlobal / 100);
+
+    return (
+      <div key={index} style={{ width: '380px', backgroundColor: 'white', borderRadius: '40px', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.1)', margin: '20px' }}>
+        <div style={{ position: 'relative', height: '380px', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', top: '25px', left: '25px', backgroundColor: '#d90429', color: 'white', padding: '6px 18px', borderRadius: '25px', fontWeight: 'bold', fontSize: '13px', zIndex: 10 }}>
+            SKU: {cod.toUpperCase()}
+          </div>
+          {foto ? (
+            <img src={foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ color: '#ccc', fontSize: '12px' }}>SIN FOTO (Vincular {cod})</div>
+          )}
+        </div>
+        <div style={{ backgroundColor: '#000', padding: '30px', color: 'white' }}>
+          <h2 style={{ fontSize: '18px', margin: '0 0 15px 0', textTransform: 'uppercase', minHeight: '44px' }}>
+            {descripcion}
+          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div>
+              <p style={{ fontSize: '10px', color: '#444', margin: 0 }}>SISTEMA PROFESIONAL</p>
+              <p style={{ fontSize: '10px', color: '#444', margin: 0 }}>STUDIO IA</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#d90429', fontSize: '34px', fontWeight: 'bold' }}>
+                ${precioFinal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </div>
+              <p style={{ fontSize: '10px', color: '#444', margin: 0 }}>PVP UNITARIO</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
