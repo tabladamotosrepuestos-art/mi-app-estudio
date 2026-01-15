@@ -28,7 +28,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
           try {
             const data = [new ClipboardItem({ [blob.type]: blob })];
             await navigator.clipboard.write(data);
-            alert("✅ Imagen copiada.");
+            alert("✅ Imagen copiada al portapapeles.");
           } catch (err) { alert("Error al copiar."); }
         }
       }, 'image/png');
@@ -36,12 +36,13 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px' }}>
+    <div className="ficha-contenedor" style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
+      {/* PANEL DE CONTROL DE LA FICHA */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
           <div style={{ display: 'flex', gap: '5px' }}>
-            <button onClick={copiarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '5px 8px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}>📋 COPIAR</button>
+            <button onClick={copiarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '8px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>📋 COPIAR</button>
             <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ddd', fontSize: '18px' }}>✕</button>
           </div>
         </div>
@@ -53,6 +54,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, logoEmpresa, logoMarc
         </div>
       </div>
 
+      {/* DISEÑO DE LA FICHA (Lo que se copia) */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
@@ -143,9 +145,7 @@ export default function App() {
 
   const toggleScanner = async () => {
     if (scanning) {
-      if (scannerRef.current) {
-        try { await scannerRef.current.stop(); } catch (e) {}
-      }
+      if (scannerRef.current) { try { await scannerRef.current.stop(); } catch (e) {} }
       setScanning(false);
     } else {
       setScanning(true);
@@ -154,35 +154,37 @@ export default function App() {
           // @ts-ignore
           const html5QrCode = new window.Html5Qrcode("reader");
           scannerRef.current = html5QrCode;
-          html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 15, qrbox: { width: 250, height: 250 } },
-            (text: string) => {
-              procesarSku(text);
-              html5QrCode.stop().then(() => setScanning(false));
-            },
-            () => {}
-          ).catch((err: any) => {
-            console.error(err);
-            alert("No se pudo abrir la cámara. Asegurate de dar permisos en el navegador y usar HTTPS.");
-            setScanning(false);
-          });
-        } catch (e) {
-          alert("La librería de cámara aún no cargó. Reintentá en un segundo.");
-          setScanning(false);
-        }
+          html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text: string) => {
+            procesarSku(text);
+            html5QrCode.stop().then(() => setScanning(false));
+          }, () => {}).catch(() => setScanning(false));
+        } catch (e) { setScanning(false); }
       }, 500);
     }
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
-      <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto' }}>
+    <div className="app-container">
+      <style>{`
+        .app-container { display: flex; height: 100vh; background: #f4f7f9; font-family: sans-serif; overflow: hidden; }
+        aside { width: 340px; background: white; padding: 30px; border-right: 1px solid #e0e6ed; overflow-y: auto; flex-shrink: 0; }
+        main { flex: 1; padding: 40px; overflow-y: auto; }
+        .grid-fichas { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px; }
+        
+        @media (max-width: 768px) {
+          .app-container { flex-direction: column; overflow-y: auto; height: auto; }
+          aside { width: 100%; border-right: none; border-bottom: 1px solid #e0e6ed; height: auto; padding: 20px; }
+          main { padding: 20px; }
+          .grid-fichas { grid-template-columns: 1fr; }
+        }
+      `}</style>
+      
+      <aside>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA</p><input type="file" onChange={(e) => {
+        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO EMPRESA (Abajo blanco)</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); }
         }} /></div>
-        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA</p><input type="file" onChange={(e) => {
+        <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>LOGO MARCA (Arriba esquina)</p><input type="file" onChange={(e) => {
           const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); }
         }} /></div>
         <div style={{ marginBottom: '20px' }}><p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa' }}>EXCEL BASE</p><input type="file" onChange={(e) => {
@@ -202,19 +204,20 @@ export default function App() {
             });
           }} />
         </label>
-        <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold' }}>🗑️ LIMPIAR PANTALLA</button>
+        <button onClick={() => setItems([])} style={{ width: '100%', padding: '12px', background: '#f8f9fa', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #ddd' }}>🗑️ LIMPIAR PANTALLA</button>
       </aside>
 
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+      <main>
         <div style={{ maxWidth: '600px', margin: '0 auto 40px', textAlign: 'center' }}>
-          <button onClick={toggleScanner} style={{ marginBottom: '15px', padding: '12px 25px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button onClick={toggleScanner} style={{ width: '100%', marginBottom: '15px', padding: '15px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
             {scanning ? "❌ CERRAR CÁMARA" : "📷 ESCANEAR CÓDIGO"}
           </button>
           {scanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 20px', borderRadius: '15px', overflow: 'hidden', border: '2px solid #2ecc71', background: '#000' }}></div>}
-          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd' }} />
-          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR FICHAS</button>
+          <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Escribí o pega SKUs aquí..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', fontSize: '16px' }} />
+          <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>GENERAR FICHAS</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
+        
+        <div className="grid-fichas">
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack} logoEmpresa={logoEmpresa} logoMarca={logoMarca}
                            onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))}
