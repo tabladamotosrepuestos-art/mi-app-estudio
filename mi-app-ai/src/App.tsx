@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
-// --- TIPOS ---
 interface Regla { x: number; y: number; }
 interface Producto {
   id: number; sku: string; nombre: string; costo: number; rent: number;
   cantidad: number; descuentoManual: number;
 }
 
-// --- COMPONENTE FICHA (DISEÑO PREMIUM RECUPERADO) ---
 const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }: {
   producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[],
   onUpdate: (p: Producto) => void, onDelete: () => void
@@ -33,7 +31,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '380px' }}>
-      {/* EDITOR DE CANTIDADES */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
           <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>CONTROL</span>
@@ -50,7 +47,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
         </div>
       </div>
 
-      {/* FICHA VISUAL (EL DISEÑO QUE TE GUSTA) */}
       <div ref={fichaRef} style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
@@ -88,7 +84,6 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, onUpdate, onDelete }:
   );
 };
 
-// --- APP PRINCIPAL ---
 export default function App() {
   const [skuInput, setSkuInput] = useState("");
   const [items, setItems] = useState<Producto[]>([]);
@@ -104,29 +99,22 @@ export default function App() {
     return () => window.removeEventListener('resize', checkSize);
   }, []);
 
-  const manejarExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = (evt) => {
-      const wb = XLSX.read(evt.target?.result, { type: 'binary' });
-      const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      setDbPrecios(data);
-    };
-    r.readAsBinaryString(f);
-  };
-
   const agregar = () => {
     skuInput.split('\n').forEach(s => {
       const c = s.trim(); if (!c) return;
-      // MAPEAREMOS LAS COLUMNAS EXACTAS DEL EXCEL
       const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
+      
+      // BUSCADOR DE COLUMNAS INTELIGENTE
+      const nombreExtraido = info ? (info["NOMBRE "] || info["NOMBRE"] || "PRODUCTO SIN NOMBRE") : "PRODUCTO NO ENCONTRADO";
+      const costoExtraido = info ? (parseFloat(info["costo"]) || 0) : 0;
+      const rentExtraida = info ? (parseFloat(info["rentabilidad "]) || parseFloat(info["rentabilidad"]) || 0) : 0;
+
       setItems(prev => [{
         id: Date.now() + Math.random(),
         sku: c,
-        nombre: info?.["NOMBRE "] || "PRODUCTO NUEVO",
-        costo: parseFloat(info?.costo) || 0,
-        rent: parseFloat(info?.["rentabilidad "]) || 0,
+        nombre: nombreExtraido,
+        costo: costoExtraido,
+        rent: rentExtraida,
         cantidad: 1,
         descuentoManual: 0
       }, ...prev]);
@@ -136,16 +124,20 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif', overflow: 'hidden' }}>
-      
-      {/* SIDEBAR RECUPERADO */}
       <aside style={{ width: isMobile ? '100%' : '340px', background: 'white', padding: '30px', borderRight: '1px solid #e0e6ed', overflowY: 'auto', flexShrink: 0 }}>
         <h2 style={{ color: '#d90429', fontSize: '22px', fontWeight: '900', marginBottom: '30px' }}>STUDIO IA</h2>
-        
         <div style={{ marginBottom: '25px' }}>
            <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>EXCEL BASE</p>
-           <input type="file" onChange={manejarExcel} style={{ fontSize: '12px' }} />
+           <input type="file" onChange={(e) => {
+             const f = e.target.files?.[0]; if (!f) return;
+             const r = new FileReader();
+             r.onload = (evt) => {
+               const wb = XLSX.read(evt.target?.result, { type: 'binary' });
+               setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+             };
+             r.readAsBinaryString(f);
+           }} />
         </div>
-
         <div style={{ marginBottom: '25px' }}>
            <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#aaa', marginBottom: '10px' }}>REGLAS %</p>
            {reglasPack.map((r, i) => (
@@ -156,8 +148,7 @@ export default function App() {
              </div>
            ))}
         </div>
-
-        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+        <label style={{ display: 'block', padding: '15px', background: '#d90429', color: 'white', borderRadius: '15px', textAlign: 'center', cursor: 'pointer', fontWeight: 'bold' }}>
           📷 CARGAR FOTOS
           <input type="file" hidden multiple onChange={(e) => {
             const files = e.target.files; if (!files) return;
@@ -168,15 +159,12 @@ export default function App() {
           }} />
         </label>
       </aside>
-
-      {/* ÁREA DE TRABAJO */}
       <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto 40px' }}>
            <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="Pega los SKUs aquí..." 
                 style={{ width: '100%', height: '80px', padding: '20px', borderRadius: '20px', border: '1px solid #ddd', outline: 'none', fontSize: '16px' }} />
            <button onClick={agregar} style={{ width: '100%', marginTop: '10px', padding: '15px', background: '#d90429', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer' }}>GENERAR FICHAS</button>
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', justifyItems: 'center' }}>
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack}
