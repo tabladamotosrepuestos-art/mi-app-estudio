@@ -163,4 +163,17 @@ export default function App() {
         <div style={{ maxWidth: '500px', margin: '0 auto 40px', textAlign: 'center' }}>
            <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="01570&#10;01539" 
                 style={{ width: '100%', height: '80px', padding: '20px', borderRadius: '25px', border: '1px solid #eee', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', outline: 'none', fontSize: '18px' }} />
-           <button onClick={agregar} style={{ width: '100%', marginTop: '15px', padding: '18px', background: '#d90429', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px
+           <button onClick={agregar} style={{ width: '100%', marginTop: '15px', padding: '18px', background: '#d90429', color: 'white', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>GENERAR FICHAS</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', justifyItems: 'center' }}>
+          {items.map(item => (
+            <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack}
+                           onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))}
+                           onDelete={() => setItems(items.filter(i => i.id !== item.id))} />
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}
