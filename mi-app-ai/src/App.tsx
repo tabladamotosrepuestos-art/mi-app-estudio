@@ -8,7 +8,7 @@ interface Producto {
   cantidad: number; descuentoManual: number;
 }
 
-// --- COMPONENTE DE LA FICHA (DISEÑO ORIGINAL MANTENIDO) ---
+// --- COMPONENTE DE LA FICHA (DISEÑO FIEL AL PDF) ---
 const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpresa, logoMarca, onUpdate, onDelete }: {
   producto: Producto, bancoFotos: Record<string, string>, reglasPack: Regla[], reglaCaja: Regla,
   logoEmpresa: string | null, logoMarca: string | null,
@@ -18,9 +18,9 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
   const foto = bancoFotos[producto.sku.toLowerCase().trim()];
   const precioBase = producto.costo * (1 + producto.rent / 100);
   
-  // Lógica de Descuento: Prioriza Caja Cerrada si la cantidad coincide o supera, sino reglas normales
+  // Lógica de Descuento: Prioriza Caja Cerrada si la cantidad es igual a la de la caja
   let descFinal = producto.descuentoManual;
-  if (producto.cantidad >= reglaCaja.x) {
+  if (producto.cantidad === reglaCaja.x) {
     descFinal = reglaCaja.y;
   } else {
     const reglaPack = [...reglasPack].sort((a, b) => b.x - a.x).find(r => producto.cantidad >= r.x);
@@ -38,7 +38,7 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
           try {
             const data = [new ClipboardItem({ [blob.type]: blob })];
             await navigator.clipboard.write(data);
-            alert("✅ Imagen copiada.");
+            alert("✅ Ficha copiada.");
           } catch (err) { alert("Error al copiar."); }
         }
       }, 'image/png');
@@ -47,29 +47,31 @@ const FichaStudioIA = ({ producto, bancoFotos, reglasPack, reglaCaja, logoEmpres
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '380px' }}>
-      {/* Controles superiores */}
+      {/* Controles del Editor */}
       <div style={{ backgroundColor: 'white', borderRadius: '25px', padding: '18px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
-          <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>UNIDADES</span>
+          <span style={{ backgroundColor: '#e8f5e9', color: '#2ecc71', padding: '4px 10px', borderRadius: '10px', fontSize: '9px', fontWeight: 'bold' }}>SELECCIONAR CANTIDAD</span>
           <div style={{ display: 'flex', gap: '5px' }}>
             <button onClick={copiarImagen} style={{ background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', padding: '8px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>📋 COPIAR</button>
             <button onClick={onDelete} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ddd', fontSize: '18px' }}>✕</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[1, 3, 6, 12, reglaCaja.x].map(n => (
             <button key={n} onClick={() => onUpdate({...producto, cantidad: n})} 
-              style={{ flex: '1 0 18%', padding: '12px 0', borderRadius: '12px', border: 'none', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: producto.cantidad === n ? '#d90429' : '#f0f0f0', color: producto.cantidad === n ? 'white' : '#666' }}>
-              x{n}
+              style={{ flex: '1', padding: '10px 0', borderRadius: '12px', border: 'none', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: producto.cantidad === n ? '#d90429' : '#f0f0f0', color: producto.cantidad === n ? 'white' : '#666' }}>
+              {n === reglaCaja.x ? `📦 CAJA` : `x${n}`}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Ficha Visual (El área que se exporta) */}
+      {/* Ficha Visual */}
       <div ref={fichaRef} className="area-captura" style={{ backgroundColor: 'white', borderRadius: '35px', overflow: 'hidden', boxShadow: '0 20px 45px rgba(0,0,0,0.12)', position: 'relative' }}>
         <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '20px', position: 'relative' }}>
           <div style={{ position: 'absolute', top: '15px', left: '15px', background: '#d90429', color: 'white', padding: '5px 12px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold' }}>SKU: {producto.sku}</div>
+          
+          {/* Logo de Marca Restablecido */}
           {logoMarca && <img src={logoMarca} alt="marca" style={{ position: 'absolute', top: '10px', right: '10px', height: '60px', maxWidth: '110px', objectFit: 'contain' }} />}
           
           <div style={{ position: 'absolute', top: '80px', right: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -131,13 +133,12 @@ export default function App() {
   const [bancoFotos, setBancoFotos] = useState<Record<string, string>>({});
   const [logoEmpresa, setLogoEmpresa] = useState<string | null>(null);
   const [logoMarca, setLogoMarca] = useState<string | null>(null);
-  const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 6, y: 15 }]);
-  const [reglaCaja, setReglaCaja] = useState<Regla>({ x: 20, y: 25 });
+  const [reglasPack, setReglasPack] = useState<Regla[]>([{ x: 3, y: 10 }, { x: 6, y: 15 }, { x: 12, y: 20 }]);
+  const [reglaCaja, setReglaCaja] = useState<Regla>({ x: 50, y: 25 });
   const [whatsapp, setWhatsapp] = useState("3513755526");
   const [instagram, setInstagram] = useState("tablada_motos");
   const [isDragging, setIsDragging] = useState(false);
 
-  // Manejo de Fotos (Carpeta o Archivos)
   const procesarArchivo = (file: File) => {
     if (file.type.startsWith('image/')) {
       const r = new FileReader();
@@ -149,22 +150,22 @@ export default function App() {
     }
   };
 
-  const traverseFileTree = (item: any) => {
-    if (item.isFile) {
-      item.file((file: File) => procesarArchivo(file));
-    } else if (item.isDirectory) {
-      const dirReader = item.createReader();
-      dirReader.readEntries((entries: any[]) => { entries.forEach(entry => traverseFileTree(entry)); });
-    }
-  };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault(); setIsDragging(false);
     const dtItems = e.dataTransfer.items;
     if (dtItems) {
       for (let i = 0; i < dtItems.length; i++) {
         const item = dtItems[i].webkitGetAsEntry();
-        if (item) traverseFileTree(item);
+        if (item) {
+            const traverse = (entry: any) => {
+                if (entry.isFile) entry.file(procesarArchivo);
+                else if (entry.isDirectory) {
+                    const reader = entry.createReader();
+                    reader.readEntries((entries: any[]) => entries.forEach(traverse));
+                }
+            };
+            traverse(item);
+        }
       }
     }
   };
@@ -176,17 +177,15 @@ export default function App() {
     const pW = pdf.internal.pageSize.getWidth();
     const pH = pdf.internal.pageSize.getHeight();
 
-    // Portada Negra Tablada Motos
+    // Portada
     pdf.setFillColor(0, 0, 0); pdf.rect(0, 0, pW, pH, 'F');
     if (logoEmpresa) pdf.addImage(logoEmpresa, 'PNG', pW/2 - 45, pH/2 - 80, 90, 90);
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(30); pdf.setFont("helvetica", "bold");
     pdf.text("CATÁLOGO DE OFERTAS", pW/2, pH/2 + 30, { align: 'center' });
-    pdf.setFontSize(14); pdf.setFont("helvetica", "normal");
-    pdf.text(`WhatsApp: ${whatsapp}`, pW/2, pH/2 + 50, { align: 'center' });
-    pdf.text(`Instagram: @${instagram}`, pW/2, pH/2 + 60, { align: 'center' });
+    pdf.setFontSize(14); pdf.text(`WhatsApp: ${whatsapp}`, pW/2, pH/2 + 50, { align: 'center' });
 
-    // Fichas (6 por página)
+    // Fichas (6 por hoja)
     const fichas = document.querySelectorAll('.area-captura');
     const mX = 10, mY = 15;
     const wF = (pW - (mX * 3)) / 2;
@@ -202,38 +201,25 @@ export default function App() {
     pdf.save("Catalogo_Tablada_Motos.pdf");
   };
 
-  const procesarSku = (sku: string) => {
-    const c = sku.trim(); if (!c) return;
-    const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
-    setItems(prev => [{
-      id: Date.now() + Math.random(), sku: c,
-      nombre: info ? (info["NOMBRE "] || info["NOMBRE"] || "PRODUCTO") : "PRODUCTO",
-      costo: info ? (parseFloat(info["costo"]) || 0) : 0,
-      rent: info ? (parseFloat(info["rentabilidad "]) || 0) : 0,
-      cantidad: 1, descuentoManual: 0
-    }, ...prev]);
-  };
-
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f4f7f9', fontFamily: 'sans-serif' }}>
       <aside style={{ width: '340px', background: 'white', padding: '30px', borderRight: '1px solid #ddd', overflowY: 'auto' }}>
         <h2 style={{ color: '#d90429', fontWeight: '900', marginBottom: '20px' }}>STUDIO IA</h2>
         
-        {/* REGLA CAJA CERRADA (Control Interno) */}
-        <div style={{ background: '#f0f4f8', padding: '15px', borderRadius: '15px', marginBottom: '20px' }}>
-          <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#555' }}>📦 REGLA CAJA CERRADA</p>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '5px' }}>
+        {/* REGLA CAJA */}
+        <div style={{ background: '#f0f4f8', padding: '15px', borderRadius: '15px', marginBottom: '15px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 'bold' }}>📦 REGLA CAJA CERRADA</p>
+          <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
             <input type="number" value={reglaCaja.x} onChange={e => setReglaCaja({...reglaCaja, x: parseInt(e.target.value)})} style={{ width: '50%' }} placeholder="Cant." />
             <input type="number" value={reglaCaja.y} onChange={e => setReglaCaja({...reglaCaja, y: parseInt(e.target.value)})} style={{ width: '50%' }} placeholder="Desc %" />
           </div>
         </div>
 
-        <button onClick={generarPDF} style={{ width: '100%', padding: '15px', background: 'black', color: 'white', borderRadius: '15px', fontWeight: 'bold', marginBottom: '20px', cursor: 'pointer', border: 'none' }}>📑 GENERAR PDF (6xHoja)</button>
-
-        <div style={{ marginBottom: '20px', background: '#f9f9f9', padding: '15px', borderRadius: '15px' }}>
+        {/* REGLAS PACKS RESTABLECIDAS */}
+        <div style={{ marginBottom: '15px', background: '#f9f9f9', padding: '15px', borderRadius: '15px' }}>
           <p style={{ fontSize: '10px', fontWeight: 'bold' }}>REGLAS PACKS %</p>
           {reglasPack.map((r, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '5px', marginBottom: '5px', alignItems: 'center' }}>
+            <div key={idx} style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
               <input type="number" value={r.x} onChange={e => { const n = [...reglasPack]; n[idx].x = parseInt(e.target.value); setReglasPack(n); }} style={{ width: '45px' }} />
               <span style={{ fontSize: '11px' }}>u. →</span>
               <input type="number" value={r.y} onChange={e => { const n = [...reglasPack]; n[idx].y = parseInt(e.target.value); setReglasPack(n); }} style={{ width: '55px', color: '#d90429', fontWeight: 'bold' }} />
@@ -241,26 +227,31 @@ export default function App() {
           ))}
         </div>
 
+        <button onClick={generarPDF} style={{ width: '100%', padding: '15px', background: 'black', color: 'white', borderRadius: '15px', fontWeight: 'bold', marginBottom: '20px', cursor: 'pointer', border: 'none' }}>📑 GENERAR PDF</button>
+
         <div style={{ fontSize: '11px', color: '#666', marginBottom: '15px' }}>
-          <p>LOGO EMPRESA</p>
+          <p>LOGO EMPRESA (TABLADA)</p>
           <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoEmpresa(r.result as string); r.readAsDataURL(f); } }} />
+          <p style={{ marginTop: '10px' }}>LOGO MARCA (CKM)</p>
+          <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setLogoMarca(r.result as string); r.readAsDataURL(f); } }} />
           <p style={{ marginTop: '10px' }}>EXCEL PRECIOS</p>
           <input type="file" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = (evt) => { const wb = XLSX.read(evt.target?.result, { type: 'binary' }); setDbPrecios(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])); }; r.readAsBinaryString(f); }} />
         </div>
 
-        <div 
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          style={{ padding: '30px 10px', background: isDragging ? '#ffebee' : '#d90429', color: 'white', borderRadius: '20px', textAlign: 'center', cursor: 'pointer', transition: '0.3s' }}
-        >
-          {isDragging ? "¡SUELTA LA CARPETA!" : "📁 ARRASTRA CARPETA FOTOS"}
+        <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop}
+          style={{ padding: '30px 10px', background: isDragging ? '#ffebee' : '#d90429', color: 'white', borderRadius: '20px', textAlign: 'center', cursor: 'pointer' }}>
+          {isDragging ? "¡SUELTA LA CARPETA!" : "📁 ARRASTRA FOTOS AQUÍ"}
         </div>
       </aside>
 
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-        <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs..." style={{ width: '100%', height: '100px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', marginBottom: '10px' }} />
-        <button onClick={() => { skuInput.split('\n').forEach(procesarSku); setSkuInput(""); }} style={{ width: '100%', padding: '18px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>GENERAR FICHAS</button>
+        <textarea value={skuInput} onChange={(e) => setSkuInput(e.target.value)} placeholder="SKUs..." style={{ width: '100%', height: '80px', borderRadius: '20px', padding: '20px', border: '1px solid #ddd', marginBottom: '10px' }} />
+        <button onClick={() => { skuInput.split('\n').forEach(s => {
+          const c = s.trim(); if (!c) return;
+          const info = dbPrecios.find((p: any) => String(p.SKU).trim() === c);
+          setItems(prev => [{ id: Date.now() + Math.random(), sku: c, nombre: info ? (info["NOMBRE "] || info["NOMBRE"] || "PRODUCTO") : "PRODUCTO", costo: info ? (parseFloat(info["costo"]) || 0) : 0, rent: info ? (parseFloat(info["rentabilidad "]) || 0) : 0, cantidad: 1, descuentoManual: 0 }, ...prev]);
+        }); setSkuInput(""); }} style={{ width: '100%', padding: '18px', background: '#d90429', color: 'white', borderRadius: '15px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>GENERAR FICHAS</button>
+        
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px', marginTop: '30px' }}>
           {items.map(item => (
             <FichaStudioIA key={item.id} producto={item} bancoFotos={bancoFotos} reglasPack={reglasPack} reglaCaja={reglaCaja} logoEmpresa={logoEmpresa} logoMarca={logoMarca} onUpdate={(u) => setItems(items.map(i => i.id === item.id ? u : i))} onDelete={() => setItems(items.filter(i => i.id !== item.id))} />
